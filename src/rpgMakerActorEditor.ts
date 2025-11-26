@@ -59,33 +59,37 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage(e => {
-			switch (e.type) {
+			switch (e.command) {
                 case 'updateActorName':
-                    this.updateActorName(document,e.newName); 
+                    this.updateActorName(document,e.id,e.newName); 
                     return; 
+				case 'updateActorNickname':
+					this.updateActorNickname(document,e.id,e.newNickName); 
+					return; 
                 case 'nextPage':
                     return; 
                 case 'previousPage':
                         return; 
-				//case 'add':
-				//	this.addNewScratch(document);
-				//	return;
-
-				//case 'delete':
-				//	this.deleteScratch(document, e.id);
-				//	return;
 			}
 		});
 
 		updateWebview();
 	}
 
-    private updateActorName(document: vscode.TextDocument, newName: string)
+    private updateActorName(document: vscode.TextDocument, id:number, newName: string)
     {
         const json = this.getDocumentAsJson(document);
-        json["name"] = newName; 
+        json[id]["name"] = newName; 
         return this.updateTextDocument(document, json);
     }
+
+	private updateActorNickname(document: vscode.TextDocument,id:number, newName: string)
+    {
+        const json = this.getDocumentAsJson(document);
+        json[id]["nickname"] = newName; 
+        return this.updateTextDocument(document, json);
+    }
+
 
 	/**
 	 * Get the static html used for the editor webviews.
@@ -132,7 +136,16 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 			<body>
 				<h1 id="actor-id"></h1>
 
-				<input type="text" id="name" />
+				<div>
+					<input type="text" id="name" /> 
+					<button id="save-name">Save Name</button>
+				</div>
+
+				
+				<div>
+					<input type="text" id="nickname" /> 
+					<button id="save-nickname">Save Nickname</button>
+				</div>
 				
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
