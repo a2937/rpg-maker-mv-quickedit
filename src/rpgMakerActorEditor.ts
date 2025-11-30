@@ -13,7 +13,7 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 		private readonly context: vscode.ExtensionContext
 	) { }
 
-    private static readonly viewType = 'rpgmakerQuickEdit.actorEdit';
+    private static readonly viewType = 'rpg-maker-mv-mz-quick-edit-tools.actorEditor';
 
     /**
 	 * Called when our custom editor is opened.
@@ -134,7 +134,8 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 				<title>RPG MV/MZ Actor Editor</title>
 			</head>
 			<body>
-				<h1 id="actor-id"></h1>
+				<h1>Actor Editor</h1>
+				<h2 id="actor-id"></h2>
 
 				<div>
 					<input type="text" id="name" /> 

@@ -18,16 +18,16 @@
   const nicknameField = document.getElementById("nickname"); 
   const updateNickNameButton  = document.getElementById("save-nickname");
 
-
-
   updateNameButton?.addEventListener("click", () =>
     {
-        vscode.postMessage({"newName": nameField?.nodeValue, command:"updateActorName", id:1});
+        // @ts-ignore
+        vscode.postMessage({"newName": nameField?.value, command:"updateActorName", id:1});
     });
 
     updateNickNameButton?.addEventListener("click", () =>
     {
-        vscode.postMessage({"newNickName": nicknameField?.nodeValue, command:"updateActorName", id:1});
+        // @ts-ignore
+        vscode.postMessage({"newNickName": nicknameField?.value, command:"updateActorName", id:1});
     });
 
 
