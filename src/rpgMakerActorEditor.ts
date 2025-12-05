@@ -33,7 +33,7 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 
 		function updateWebview() {
 			webviewPanel.webview.postMessage({
-				type: 'update',
+				command: 'update',
 				text: document.getText(),
 			});
 		}
@@ -59,13 +59,20 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage(e => {
+			console.log(e); 
 			switch (e.command) {
                 case 'updateActorName':
+					console.log("Updated name"); 
                     this.updateActorName(document,e.id,e.newName); 
                     return; 
 				case 'updateActorNickname':
+					console.log("Updated nickname"); 
 					this.updateActorNickname(document,e.id,e.newNickName); 
 					return; 
+				case 'sendActorData':
+					console.log("Sent actordata"); 
+					const actorData = this.getDocumentAsJson(document)[1];
+					webviewPanel.webview.postMessage({'ActorData': actorData,command: "load"})
                 case 'nextPage':
                     return; 
                 case 'previousPage':
@@ -136,7 +143,6 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 			<body>
 				<h1>Actor Editor</h1>
 				<h2 id="actor-id"></h2>
-
 				<div>
 					<input type="text" id="name" /> 
 					<button id="save-name">Save Name</button>
@@ -147,7 +153,7 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 					<input type="text" id="nickname" /> 
 					<button id="save-nickname">Save Nickname</button>
 				</div>
-				
+				<p id="error-message"></p> 
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
 			</html>`;
