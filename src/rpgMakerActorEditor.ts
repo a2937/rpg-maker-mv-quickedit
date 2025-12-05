@@ -13,7 +13,7 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 		private readonly context: vscode.ExtensionContext
 	) { }
 
-    private static readonly viewType = 'rpgmakerQuickEdit.actorEdit';
+    private static readonly viewType = 'rpg-maker-mv-mz-quick-edit-tools.actorEditor';
 
     /**
 	 * Called when our custom editor is opened.
@@ -33,7 +33,7 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 
 		function updateWebview() {
 			webviewPanel.webview.postMessage({
-				type: 'update',
+				command: 'update',
 				text: document.getText(),
 			});
 		}
@@ -59,33 +59,44 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage(e => {
-			switch (e.type) {
+			console.log(e); 
+			switch (e.command) {
                 case 'updateActorName':
-                    this.updateActorName(document,e.newName); 
+					console.log("Updated name"); 
+                    this.updateActorName(document,e.id,e.newName); 
                     return; 
+				case 'updateActorNickname':
+					console.log("Updated nickname"); 
+					this.updateActorNickname(document,e.id,e.newNickName); 
+					return; 
+				case 'sendActorData':
+					console.log("Sent actordata"); 
+					const actorData = this.getDocumentAsJson(document)[1];
+					webviewPanel.webview.postMessage({'ActorData': actorData,command: "load"})
                 case 'nextPage':
                     return; 
                 case 'previousPage':
                         return; 
-				//case 'add':
-				//	this.addNewScratch(document);
-				//	return;
-
-				//case 'delete':
-				//	this.deleteScratch(document, e.id);
-				//	return;
 			}
 		});
 
 		updateWebview();
 	}
 
-    private updateActorName(document: vscode.TextDocument, newName: string)
+    private updateActorName(document: vscode.TextDocument, id:number, newName: string)
     {
         const json = this.getDocumentAsJson(document);
-        json["name"] = newName; 
+        json[id]["name"] = newName; 
         return this.updateTextDocument(document, json);
     }
+
+	private updateActorNickname(document: vscode.TextDocument,id:number, newName: string)
+    {
+        const json = this.getDocumentAsJson(document);
+        json[id]["nickname"] = newName; 
+        return this.updateTextDocument(document, json);
+    }
+
 
 	/**
 	 * Get the static html used for the editor webviews.
@@ -130,10 +141,19 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 				<title>RPG MV/MZ Actor Editor</title>
 			</head>
 			<body>
-				<h1 id="actor-id"></h1>
+				<h1>Actor Editor</h1>
+				<h2 id="actor-id"></h2>
+				<div>
+					<input type="text" id="name" /> 
+					<button id="save-name">Save Name</button>
+				</div>
 
-				<input type="text" id="name" />
 				
+				<div>
+					<input type="text" id="nickname" /> 
+					<button id="save-nickname">Save Nickname</button>
+				</div>
+				<p id="error-message"></p> 
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
 			</html>`;
