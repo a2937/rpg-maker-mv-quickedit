@@ -80,7 +80,7 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 				{
 					console.log("Sent actordata"); 
 					RPGMakerActorEditorProvider.currentActorId = e.selectedActor; 
-					const actorData = JSON.parse(this.getDocumentAsJson(document))[RPGMakerActorEditorProvider.currentActorId];
+					const actorData = this.getDocumentAsJson(document)[RPGMakerActorEditorProvider.currentActorId];
 					webviewPanel.webview.postMessage({'actorData': JSON.stringify(actorData),command: "loadActor"});
 					break; 
 				}
