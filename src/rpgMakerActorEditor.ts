@@ -15,6 +15,8 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 
     private static readonly viewType = 'rpg-maker-mv-mz-quick-edit-tools.actorEditor';
 
+	private static currentActorId = 1; 
+
     /**
 	 * Called when our custom editor is opened.
 	 * 
@@ -35,6 +37,7 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 			webviewPanel.webview.postMessage({
 				command: 'update',
 				text: document.getText(),
+				actorId: RPGMakerActorEditorProvider.currentActorId
 			});
 		}
 
@@ -62,38 +65,75 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 			console.log(e); 
 			switch (e.command) {
                 case 'updateActorName':
+				{
 					console.log("Updated name"); 
-                    this.updateActorName(document,e.id,e.newName); 
-                    return; 
-				case 'updateActorNickname':
-					console.log("Updated nickname"); 
-					this.updateActorNickname(document,e.id,e.newNickName); 
+					this.updateActorName(document, e.newName); 
 					return; 
+				}		
+				case 'updateActorNickname':
+				{
+					console.log("Updated nickname"); 
+					this.updateActorNickname(document, e.newNickName); 
+					return; 
+				}
 				case 'sendActorData':
+				{
 					console.log("Sent actordata"); 
-					const actorData = this.getDocumentAsJson(document)[1];
-					webviewPanel.webview.postMessage({'ActorData': actorData,command: "load"})
-                case 'nextPage':
-                    return; 
-                case 'previousPage':
-                        return; 
+					RPGMakerActorEditorProvider.currentActorId = e.selectedActor; 
+					const actorData = JSON.parse(this.getDocumentAsJson(document))[RPGMakerActorEditorProvider.currentActorId];
+					webviewPanel.webview.postMessage({'actorData': JSON.stringify(actorData),command: "loadActor"});
+				}
+                case 'nextActor':
+				{
+					let actorList = JSON.parse(this.getDocumentAsJson(document));
+					if(RPGMakerActorEditorProvider.currentActorId + 1 > actorList.length )
+					{
+						// TODO: Make a nice error here 
+						return; 
+					}
+					else 
+					{
+						RPGMakerActorEditorProvider.currentActorId++; 
+						const actorData = actorList[RPGMakerActorEditorProvider.currentActorId];
+						webviewPanel.webview.postMessage({'actorData': JSON.stringify(actorData),command: "loadActor"});
+					}
+					break; 
+				}
+                case 'previousActor':
+				{
+						if(RPGMakerActorEditorProvider.currentActorId - 1 <= 0 )
+						{
+							// TODO: Make a nice error here 
+							return; 
+						}
+						else 
+						{
+							RPGMakerActorEditorProvider.currentActorId--; 
+							const actorData = JSON.parse(this.getDocumentAsJson(document))[RPGMakerActorEditorProvider.currentActorId];
+							webviewPanel.webview.postMessage({'actorData': JSON.stringify(actorData),command: "loadActor"});
+						}
+				}
+				default:
+				{
+					
+				}
 			}
 		});
 
 		updateWebview();
 	}
 
-    private updateActorName(document: vscode.TextDocument, id:number, newName: string)
+    private updateActorName(document: vscode.TextDocument, newName: string)
     {
         const json = this.getDocumentAsJson(document);
-        json[id]["name"] = newName; 
+        json[RPGMakerActorEditorProvider.currentActorId]["name"] = newName; 
         return this.updateTextDocument(document, json);
     }
 
-	private updateActorNickname(document: vscode.TextDocument,id:number, newName: string)
+	private updateActorNickname(document: vscode.TextDocument, newName: string)
     {
         const json = this.getDocumentAsJson(document);
-        json[id]["nickname"] = newName; 
+        json[RPGMakerActorEditorProvider.currentActorId]["nickname"] = newName; 
         return this.updateTextDocument(document, json);
     }
 
@@ -120,6 +160,7 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();
 
+
 		return /* html */`
 			<!DOCTYPE html>
 			<html lang="en">
@@ -143,16 +184,28 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 			<body>
 				<h1>Actor Editor</h1>
 				<h2 id="actor-id"></h2>
-				<div>
-					<input type="text" id="name" /> 
-					<button id="save-name">Save Name</button>
-				</div>
-
-				
-				<div>
-					<input type="text" id="nickname" /> 
-					<button id="save-nickname">Save Nickname</button>
-				</div>
+				<div class="form">
+					<div>
+						
+						<input type="text" id="name" /> 
+						<label for="name">Name</label>
+						<button id="save-name">Save Name</button>
+					</div>
+					<div>
+						<input type="text" id="nickname" /> 
+						<label for="name">Nickname</label>
+						<button id="save-nickname">Save Nickname</button>
+					</div>
+					<div>
+						<input min="1" type="number" id="choose-actor" />
+					</div>
+					<div>
+						<button id="next-actor">Next Actor</div>
+						<button id="previous-actor">Previous Actor</div>
+					</div>
+				</div> 
+				<label>How the actor looks in the JSON code code</label>
+				<code id="actor-json"></code>
 				<p id="error-message"></p> 
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>

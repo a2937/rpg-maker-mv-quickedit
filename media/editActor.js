@@ -5,22 +5,50 @@
 {
   const vscode = acquireVsCodeApi();
   const actorIdTitle = document.getElementById("actor-id");
+
   const nameField = document.getElementById("name");
 
   const updateNameButton  = document.getElementById("save-name");
 
   const nicknameField = document.getElementById("nickname"); 
   const updateNickNameButton  = document.getElementById("save-nickname"); 
+
+  const actorJSONCode = document.getElementById("actor-json"); 
+
+  const actorChooser = document.getElementById("actor-chooser"); 
+
+  const nextActorButton = document.getElementById("next-actor"); 
+
+  const previousActorButton = document.getElementById("previous-actor"); 
+
+
+  previousActorButton?.addEventListener("click", () =>
+  {
+    vscode.postMessage({command: "previousActor"}); 
+  })
+
+  nextActorButton?.addEventListener("click", () =>
+  {
+    vscode.postMessage({command: "nextActor"}); 
+  })
+
   updateNameButton?.addEventListener("click", () =>
     {
         // @ts-ignore
-        vscode.postMessage({"newName": nameField?.value, command:"updateActorName", id:1});
+        vscode.postMessage({"newName": nameField?.value, command:"updateActorName"});
     });
 
     updateNickNameButton?.addEventListener("click", () =>
     {
         // @ts-ignore
-        vscode.postMessage({"newNickName": nicknameField?.value, command:"updateActorNickname", id:1});
+        vscode.postMessage({"newNickName": nicknameField?.value, command:"updateActorNickname"});
+    });
+
+    actorChooser?.addEventListener("onchange", () =>
+    {
+      // @ts-ignore
+      const chosenActor = actorChooser.value; 
+      vscode.postMessage({command: "sendActorData", selectedActor: chosenActor}); 
     });
 
     window.addEventListener('message', event =>
@@ -32,9 +60,12 @@
       {
         case 'update':
         {
-          let actorValue = JSON.parse(message.text)[1];
+          let actorValue = JSON.parse(message.text)[message.actorId];
+
           // @ts-ignore
-          actorIdTitle.innerText = JSON.stringify(actorValue); 
+          actorIdTitle.innerText = "Actor: " + actorValue["id"].padLeft(3,"0"); 
+          // @ts-ignore
+          actorJSONCode.innerText = JSON.stringify(actorValue); 
           // @ts-ignore
           nameField.value =  actorValue["name"];
 
@@ -48,39 +79,21 @@
           //nameField.value = actorValue["name"];  
           break; 
         }
+        case 'loadActor':
+        {
+            let actorValue = JSON.parse(message.actorData);
+            // @ts-ignore
+            actorIdTitle.innerText = "Actor: " + actorValue["id"].padLeft(3,"0"); 
+            // @ts-ignore
+            actorJSONCode.innerText = JSON.stringify(actorValue); 
+            // @ts-ignore
+            nameField.value =  actorValue["name"];
+  
+            // @ts-ignore
+            nicknameField.value = actorValue["nickname"];
+        }
         default:
           break; 
       }
     }); 
-    /*
-    window.addEventListener('message', event =>
-    {
-      const message = event.data; // The json data that the extension sent
-      // @ts-ignore
-      actorIdTitle.innerText = message; 
-      // @ts-ignore
-      // @ts-ignore
-      actorIdTitle.textContent = message; 
-      switch (message.command) {
-            case 'load':
-              const actorData = message.ActorData;
-              // @ts-ignore
-              actorIdTitle?.textContent = "Actor " + currentActorId.toString(); 
-              // @ts-ignore
-              nicknameField.value = actorData["nickname"];
-              // @ts-ignore
-              nameField.value = actorData["name"];  
-              break; 
-            case 'update':
-              let actorValue = JSON.parse(message.text)[1]; 
-              // @ts-ignore
-              actorIdTitle?.textContent = "Actor " + currentActorId.toString(); 
-              // @ts-ignore
-              nicknameField.value = actorValue["nickname"];
-              // @ts-ignore
-              nameField.value = actorValue["name"];  
-              break; 
-      }
-    });
-    */ 
 })(); 
