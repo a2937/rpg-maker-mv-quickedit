@@ -67,13 +67,13 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
                 case 'updateActorName':
 				{
 					console.log("Updated name"); 
-					this.updateActorName(document, e.newName); 
+					this.updateActorName(document, e.newName.trim()); 
 					break; 
 				}		
 				case 'updateActorNickname':
 				{
 					console.log("Updated nickname"); 
-					this.updateActorNickname(document, e.newNickName); 
+					this.updateActorNickname(document, e.newNickName.trim()); 
 					break; 
 				}
 				case 'sendActorData':
@@ -253,4 +253,5 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 		return vscode.workspace.applyEdit(edit);
 	}
     
+
 }
