@@ -100,23 +100,24 @@
           break; 
       }
     }); 
+
+    /**
+     * @param {HTMLElement} actorJSONCode
+     * @param {{ [x: string]: any; }} actorValue
+     */
+    function reloadActorData(actorJSONCode, actorValue) {
+      // @ts-ignore
+      actorJSONCode.innerText = JSON.stringify(actorValue);
+      // @ts-ignore
+      actorIdTitle.innerText = "Actor: " + actorValue["id"].toString().padStart(3, "0");
+      // @ts-ignore
+      nameField.value = actorValue["name"];
+
+      // @ts-ignore
+      nicknameField.value = actorValue["nickname"];
+
+      // @ts-ignore
+      faceField.value = actorValue["faceIndex"];
+    }
+
 })(); 
-
-/**
- * @param {HTMLElement} actorJSONCode
- * @param {{ [x: string]: any; }} actorValue
- */
-function reloadActorData(actorJSONCode, actorValue) {
-  // @ts-ignore
-  actorJSONCode.innerText = JSON.stringify(actorValue);
-  // @ts-ignore
-  actorIdTitle.innerText = "Actor: " + actorValue["id"].toString().padStart(3, "0");
-  // @ts-ignore
-  nameField.value = actorValue["name"];
-
-  // @ts-ignore
-  nicknameField.value = actorValue["nickname"];
-
-  // @ts-ignore
-  faceField.value = actorValue["faceIndex"];
-}

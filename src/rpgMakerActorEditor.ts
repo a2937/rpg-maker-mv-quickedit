@@ -206,7 +206,6 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 				<h2 id="actor-id"></h2>
 				<div class="form">
 					<div>
-						
 						<input type="text" id="name" /> 
 						<label for="name">Name</label>
 						<button id="save-name">Save Name</button>
