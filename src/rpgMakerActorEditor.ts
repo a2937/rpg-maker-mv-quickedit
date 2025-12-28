@@ -76,6 +76,12 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 					this.updateActorNickname(document, e.newNickName.trim()); 
 					break; 
 				}
+				case 'updateFace':
+				{
+					console.log("Updated face"); 
+					this.updateActorFace(document, e.newFace); 
+					break; 
+				}
 				case 'sendActorData':
 				{
 					console.log("Sent actordata"); 
@@ -144,6 +150,13 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
         return this.updateTextDocument(document, json);
     }
 
+	private updateActorFace(document: vscode.TextDocument, newFace: number)
+    {
+        const json = this.getDocumentAsJson(document);
+        json[RPGMakerActorEditorProvider.currentActorId]["faceIndex"] = newFace; 
+        return this.updateTextDocument(document, json);
+    }
+
 
 	/**
 	 * Get the static html used for the editor webviews.
@@ -200,8 +213,13 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 					</div>
 					<div>
 						<input type="text" id="nickname" /> 
-						<label for="name">Nickname</label>
+						<label for="nickname">Nickname</label>
 						<button id="save-nickname">Save Nickname</button>
+					</div>
+					<div>
+						<input type="number" id="face-index" /> 
+						<label for="face-index">Face index</label>
+						<button id="save-face">Save Face Index</button>
 					</div>
 					<div>
 						<input min="1" type="number" id="choose-actor" value=1 />
