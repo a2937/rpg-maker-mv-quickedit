@@ -67,7 +67,14 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage(e => {
 			console.log(e); 
+			const mapObject = this.getDocumentAsJson(document); 
 			switch (e.command) {
+				case 'togglePlayBGM':
+				{
+					this.togglePlayBGM(document,e.useBGM);
+					const mapData = JSON.stringify(mapObject)
+					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap"});
+				}
 				default:
 				{
 					break; 
@@ -76,6 +83,13 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		});
 
 		updateWebview();
+	}
+
+	private togglePlayBGM(document: vscode.TextDocument,switchState: boolean)
+	{
+		const json = this.getDocumentAsJson(document);
+		json["autoplayBgm"] = switchState;
+		return this.updateTextDocument(document, json);
 	}
 
 	/**
@@ -179,7 +193,15 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 				</form>
 				<h4>Event Code list</h4>
 				<form>
-
+					<table>
+					<thead>
+						<th>Code</th>
+						<th>Parameters</th>
+					</thead>
+					<tbody id="event-data">
+						
+					</tbody>
+					</table>
 				</form>
 				<label>How the event page looks in the JSON code code</label>
 				<code id="page-json"></code>
