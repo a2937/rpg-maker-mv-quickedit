@@ -18,7 +18,7 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 	private static currentEventId = 1; 
 
 	
-	private static currentPageId = 1; 
+	private static currentPageId = 0; 
 
     /**
 	 * Called when our custom editor is opened.
@@ -37,6 +37,7 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
 		function updateWebview() {
+			console.log("Sending map JSON from update");
 			webviewPanel.webview.postMessage({
 				command: 'update',
 				text: document.getText(),
@@ -67,13 +68,24 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage(e => {
 			console.log(e); 
-			const mapObject = this.getDocumentAsJson(document); 
+			const mapObject = this.getDocumentAsJson(document);
+			 const mapData = JSON.stringify(mapObject);
 			switch (e.command) {
 				case 'togglePlayBGM':
 				{
+					console.log("Toggled Play BGM"); 
 					this.togglePlayBGM(document,e.useBGM);
-					const mapData = JSON.stringify(mapObject)
-					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap"});
+					
+					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", 
+						eventId: RPGMakerMapEditorProvider.currentEventId ,
+						pageId: RPGMakerMapEditorProvider.currentPageId });
+					break; 
+				}
+				case 'error':
+				{
+					console.log("Error"); 
+					console.error(e.error);
+					break;
 				}
 				default:
 				{
@@ -137,15 +149,15 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 			</head>
 			<body>
 				<h1>Map Editor</h1>
-				<h2>Overveiw</h2>
+				<h2>Overview</h2>
 				<h3>Map Details</h3> 
 				<div class="form">
 					<div>
-						<input type="checkbox" id="autoplayBGM"/> 
+						<input type="checkbox" id="autoplayBGM" /> 
 						<label for="autoplayBGM">Autoplay BGM</label> 
 					</div>
 					<div>
-						<input type="checkbox" id="autoplayBGS"/> 
+						<input type="checkbox" id="autoplayBGS" /> 
 						<label for="autoplayBGS">Autoplay BGS</label> 
 					</div>
 
@@ -196,6 +208,7 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 					<table>
 					<thead>
 						<th>Code</th>
+						<th>Indent</th>
 						<th>Parameters</th>
 					</thead>
 					<tbody id="event-data">
