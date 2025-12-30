@@ -65,17 +65,23 @@
           indentEdit.value = codeList[row].indent; 
           indentData.appendChild(indentEdit); 
 
-          const parametersData = document.createElement("td");
-          for(let param = 0; param < codeList[row].parameters.length; param++)
-          {
-              let parameterEdit = document.createElement("input");
-              parameterEdit.value = codeList[row].parameters[param]; 
-              parametersData.appendChild(parameterEdit); 
-          }
-
+          //const parametersData = document.createElement("td");
           newTableRow.appendChild(codeData);
           newTableRow.appendChild(indentData);
-          newTableRow.appendChild(parametersData);
+          if(codeList[row].parameters != null)
+            {
+                //parametersData.colSpan = codeList[row].parameters.length;    
+                //parametersData.style.width = "65%";  
+                for(let param = 0; param < codeList[row].parameters.length; param++)
+                {
+                  let parametersCell = document.createElement("td");
+                    let parameterEdit = document.createElement("input");
+                    parameterEdit.value = codeList[row].parameters[param]; 
+
+                    parametersCell.appendChild(parameterEdit); 
+                    newTableRow.appendChild(parametersCell);
+                }
+            }
 
           // @ts-ignore
           eventCodeTableBody.appendChild(newTableRow); 
