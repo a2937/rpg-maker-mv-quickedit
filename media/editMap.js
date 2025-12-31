@@ -15,12 +15,40 @@
 
   const errorElement = document.getElementById("error-message"); 
 
+  const eventCodeUpdateButton = document.getElementById("update-codes"); 
+
 
 
   autoPlayBGMElement?.addEventListener("click", () =>
   {
       // @ts-ignore
       vscode.postMessage({"useBGM": autoPlayBGMElement?.checked, command:"togglePlayBGM"});
+  });
+
+  eventCodeUpdateButton?.addEventListener("click", () =>
+  {
+    let data = []; 
+    // @ts-ignore
+    const tableRows = eventCodeTableBody.querySelectorAll("tr"); 
+    if(tableRows != null)
+    {
+        for(let rowCount = 0; rowCount < tableRows.length; rowCount++)
+        {
+            let tableRow = tableRows.item(rowCount); 
+            let newCode = {code: 0, indent:0, parameters:[]}; 
+            // @ts-ignore
+            newCode.code = tableRow.children[0].children[0].value;
+            // @ts-ignore
+            newCode.indent = tableRow.children[1].children[0].value;
+            for(let i = 2; i < tableRow.children.length;i++)
+            {
+              // @ts-ignore
+              newCode.parameters[i - 2] = tableRow.children[i].children[0].value;
+            }
+            data.push(newCode); 
+        }
+        vscode.postMessage({command:'updateParameters', codeList: data});
+    }
   });
 
 
@@ -31,6 +59,9 @@
    * @param {number} [pageId]
    */
   function reloadMap(mapJSONCode, mapValue,eventId,pageId) {
+    try
+    {
+
         // @ts-ignore
         pageJSONCode.innerText = mapJSONCode; 
          
@@ -51,7 +82,8 @@
 
         const page = event.pages[pageId]; 
         const codeList = page.list; 
-        for(let row = 0; row < codeList.length; row++)
+        // @ts-ignore
+        for(let row = 0; row < codeList.length && eventCodeTableBody?.children.length < codeList.length; row++)
         {
           const newTableRow = document.createElement("tr");
         
@@ -86,35 +118,50 @@
           // @ts-ignore
           eventCodeTableBody.appendChild(newTableRow); 
         }
+      }
+      catch(ex)
+      {
+        vscode.postMessage({command:"error", error: ex})
+      }
   }
 
   window.addEventListener('message', event =>
   {
     const message = event.data;
-    switch(message.command)
+    try
     {
-      case 'loadMap':
+      switch(message.command)
       {
-        const mapJSONCode = message.mapData; 
-        const mapValue = JSON.parse(mapJSONCode); 
-        const pageId = message.pageId; 
-        const eventId = message.eventId; 
-        reloadMap(mapJSONCode,mapValue,eventId,pageId);
-        break; 
-      }
-      case 'update':
-      {
-        const mapJSONCode = message.text; 
-        const mapValue = JSON.parse(mapJSONCode); 
-        const pageId = message.pageId; 
-        const eventId = message.eventId; 
+        case 'loadMap':
+        {
+          const mapJSONCode = message.mapData; 
+          const mapValue = JSON.parse(mapJSONCode); 
+          const pageId = message.pageId; 
+          const eventId = message.eventId; 
+          reloadMap(mapJSONCode,mapValue,eventId,pageId);
+          break; 
+        }
+        case 'update':
+        {
+          const mapJSONCode = message.text; 
+          const mapValue = JSON.parse(mapJSONCode); 
+          const pageId = message.pageId; 
+          const eventId = message.eventId; 
 
-        reloadMap(mapJSONCode,mapValue,eventId,pageId);
-        break; 
+          reloadMap(mapJSONCode,mapValue,eventId,pageId);
+          break; 
+        }
+        default:
+          break; 
       }
-      default:
-        break; 
-    }
+  }
+  catch(ex)
+  {
+    // @ts-ignore
+    errorElement.innerText = ex; 
+    // @ts-ignore
+    vscode.postMessage({command:'error',error: ex.message}); 
+  }
   }); 
 })(); 
 

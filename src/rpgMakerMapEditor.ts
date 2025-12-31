@@ -81,6 +81,16 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 						pageId: RPGMakerMapEditorProvider.currentPageId });
 					break; 
 				}
+				case 'updateParameters':
+				{
+					console.log("Updated parameters"); 
+					console.log(e.codeList);
+					this.updatePageCodes(document, e.codeList)
+					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", 
+						eventId: RPGMakerMapEditorProvider.currentEventId ,
+						pageId: RPGMakerMapEditorProvider.currentPageId });
+					break; 
+				}
 				case 'error':
 				{
 					console.log("Error"); 
@@ -101,6 +111,13 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 	{
 		const json = this.getDocumentAsJson(document);
 		json["autoplayBgm"] = switchState;
+		return this.updateTextDocument(document, json);
+	}
+
+	private updatePageCodes(document: vscode.TextDocument, codeList: any)
+	{
+		const json = this.getDocumentAsJson(document);
+		json.events[RPGMakerMapEditorProvider.currentEventId].pages[RPGMakerMapEditorProvider.currentPageId].list  = codeList; 
 		return this.updateTextDocument(document, json);
 	}
 
@@ -215,6 +232,7 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 						
 					</tbody>
 					</table>
+					<button id="update-codes">Update Event Code</button>
 				</form>
 				<label>How the event page looks in the JSON code code</label>
 				<code id="page-json"></code>
