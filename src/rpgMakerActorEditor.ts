@@ -62,7 +62,6 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage(e => {
-			console.log(e); 
 			switch (e.command) {
                 case 'updateActorName':
 				{

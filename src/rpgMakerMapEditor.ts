@@ -68,8 +68,8 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage(e => {
 			console.log(e); 
-			const mapObject = this.getDocumentAsJson(document);
-			 const mapData = JSON.stringify(mapObject);
+			//const mapObject = this.getDocumentAsJson(document);
+			// const mapData = JSON.stringify(mapObject);
 			switch (e.command) {
 				case 'togglePlayBGM':
 				{
@@ -214,8 +214,7 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 
 				</form>
 				<h4>Event Code list</h4>
-				<form>
-					<table>
+					<table id="code-table">
 					<thead>
 						<th>Code</th>
 						<th>Indent</th>
@@ -226,7 +225,6 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 					</tbody>
 					</table>
 					<button id="update-codes">Update Event Code</button>
-				</form>
 				<label>How the event page looks in the JSON code code</label>
 				<code id="page-json"></code>
 				<p id="error-message"></p> 

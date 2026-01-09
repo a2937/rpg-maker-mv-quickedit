@@ -31,34 +31,34 @@
     // @ts-ignore
     const tableRows = eventCodeTableBody.querySelectorAll("tr"); 
 
-        for(let rowCount = 0; rowCount < tableRows.length; rowCount++)
+    for(let rowCount = 0; rowCount < tableRows.length; rowCount++)
+    {
+        let tableRow = tableRows.item(rowCount); 
+        let newCode = {code: 0, indent:0, parameters:[]}; 
+        // @ts-ignore
+        newCode.code = tableRow.children[0].children[0].value;
+        // @ts-ignore
+        newCode.indent = tableRow.children[1].children[0].value;
+        for(let i = 2; i < tableRow.children.length;i++)
         {
-            let tableRow = tableRows.item(rowCount); 
-            let newCode = {code: 0, indent:0, parameters:[]}; 
-            // @ts-ignore
-            newCode.code = tableRow.children[0].children[0].value;
-            // @ts-ignore
-            newCode.indent = tableRow.children[1].children[0].value;
-            for(let i = 2; i < tableRow.children.length;i++)
-            {
-              // @ts-ignore
-              newCode.parameters[i - 2] = tableRow.children[i].children[0].value;
-            }
-            data.push(newCode); 
+          // @ts-ignore
+          newCode.parameters[i - 2] = tableRow.children[i].children[0].value;
         }
-        vscode.postMessage({command:'updateParameters', codeList: data});
+        data.push(newCode); 
+    }
+    vscode.postMessage({command:'updateParameters', codeList: data});
   });
 
 
   /**
-   * @param {string} mapJSONCode
    * @param {{ [x: string]: any; events: { [x: string]: any; }; }} [mapValue]
    * @param {number} [eventId]
    * @param {number} [pageId]
    */
-  function reloadMap(mapJSONCode, mapValue,eventId,pageId) {
+  function reloadMap(mapValue,eventId,pageId) {
+
         // @ts-ignore
-        pageJSONCode.innerText = mapJSONCode; 
+        pageJSONCode.innerText = JSON.stringify(mapValue.events[eventId].pages[pageId],0,1.5); 
          
         // @ts-ignore
         autoPlayBGMElement.checked = mapValue["autoplayBgm"] == true;
@@ -77,6 +77,7 @@
 
         const page = event.pages[pageId]; 
         const codeList = page.list; 
+        const fragment = document.createDocumentFragment();
         // @ts-ignore
         for(let row = 0; row < codeList.length; row++)
         {
@@ -95,7 +96,7 @@
           //const parametersData = document.createElement("td");
           newTableRow.appendChild(codeData);
           newTableRow.appendChild(indentData);
-          if(codeList[row].parameters != null)
+          if(codeList[row].parameters != null && codeList[row].parameters.length > 0)
             {
                 //parametersData.colSpan = codeList[row].parameters.length;    
                 //parametersData.style.width = "65%";  
@@ -111,17 +112,11 @@
             }
 
           // @ts-ignore
-          if(eventCodeTableBody?.children[row] != null)
-          {
-            eventCodeTableBody?.replaceChild(newTableRow,eventCodeTableBody?.children[row] )
-          }
-          else
-          {
-            // @ts-ignore
-            eventCodeTableBody.appendChild(newTableRow); 
-          }
+          // @ts-ignore
+          fragment.appendChild(newTableRow); 
           
-        }
+      }
+      eventCodeTableBody?.replaceChildren(fragment);
   }
 
   window.addEventListener('message', event =>
@@ -137,7 +132,7 @@
           const mapValue = JSON.parse(mapJSONCode); 
           const pageId = message.pageId; 
           const eventId = message.eventId; 
-          reloadMap(mapJSONCode,mapValue,eventId,pageId);
+          reloadMap(mapValue,eventId,pageId);
           break; 
         }
         case 'update':
@@ -146,8 +141,8 @@
           const mapValue = JSON.parse(mapJSONCode); 
           const pageId = message.pageId; 
           const eventId = message.eventId; 
-          vscode.setState({mapJSONCode: mapJSONCode,mapValue: mapValue,pageId:pageId,eventId:eventId });
-          reloadMap(mapJSONCode,mapValue,eventId,pageId);
+          vscode.setState({mapValue: mapValue,pageId:pageId,eventId:eventId });
+          reloadMap(mapValue,eventId,pageId);
           break; 
         }
         default:
@@ -155,9 +150,11 @@
       }
   }
   catch(ex)
-  {
+  {   
+     console.log(ex); 
     // @ts-ignore
     errorElement.innerText = ex; 
+
     // @ts-ignore
     vscode.postMessage({command:'error',error: ex.message}); 
   }
@@ -166,7 +163,7 @@
   const state = vscode.getState();
 	if (state) {
     // @ts-ignore
-    reloadMap(state.mapJSONCode,state.mapValue,state.eventId,state.pageId);
+    reloadMap(state.mapValue,state.eventId,state.pageId);
 	}
 })(); 
 
