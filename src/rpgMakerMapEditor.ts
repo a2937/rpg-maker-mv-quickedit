@@ -75,10 +75,6 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 				{
 					console.log("Toggled Play BGM"); 
 					this.togglePlayBGM(document,e.useBGM);
-					
-					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", 
-						eventId: RPGMakerMapEditorProvider.currentEventId ,
-						pageId: RPGMakerMapEditorProvider.currentPageId });
 					break; 
 				}
 				case 'updateParameters':
@@ -86,9 +82,6 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 					console.log("Updated parameters"); 
 					console.log(e.codeList);
 					this.updatePageCodes(document, e.codeList)
-					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", 
-						eventId: RPGMakerMapEditorProvider.currentEventId ,
-						pageId: RPGMakerMapEditorProvider.currentPageId });
 					break; 
 				}
 				case 'error':

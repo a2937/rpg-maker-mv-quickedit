@@ -30,8 +30,7 @@
     let data = []; 
     // @ts-ignore
     const tableRows = eventCodeTableBody.querySelectorAll("tr"); 
-    if(tableRows != null)
-    {
+
         for(let rowCount = 0; rowCount < tableRows.length; rowCount++)
         {
             let tableRow = tableRows.item(rowCount); 
@@ -48,7 +47,6 @@
             data.push(newCode); 
         }
         vscode.postMessage({command:'updateParameters', codeList: data});
-    }
   });
 
 
@@ -59,9 +57,6 @@
    * @param {number} [pageId]
    */
   function reloadMap(mapJSONCode, mapValue,eventId,pageId) {
-    try
-    {
-
         // @ts-ignore
         pageJSONCode.innerText = mapJSONCode; 
          
@@ -83,7 +78,7 @@
         const page = event.pages[pageId]; 
         const codeList = page.list; 
         // @ts-ignore
-        for(let row = 0; row < codeList.length && eventCodeTableBody?.children.length < codeList.length; row++)
+        for(let row = 0; row < codeList.length; row++)
         {
           const newTableRow = document.createElement("tr");
         
@@ -116,13 +111,17 @@
             }
 
           // @ts-ignore
-          eventCodeTableBody.appendChild(newTableRow); 
+          if(eventCodeTableBody?.children[row] != null)
+          {
+            eventCodeTableBody?.replaceChild(newTableRow,eventCodeTableBody?.children[row] )
+          }
+          else
+          {
+            // @ts-ignore
+            eventCodeTableBody.appendChild(newTableRow); 
+          }
+          
         }
-      }
-      catch(ex)
-      {
-        vscode.postMessage({command:"error", error: ex})
-      }
   }
 
   window.addEventListener('message', event =>
@@ -147,7 +146,7 @@
           const mapValue = JSON.parse(mapJSONCode); 
           const pageId = message.pageId; 
           const eventId = message.eventId; 
-
+          vscode.setState({mapJSONCode: mapJSONCode,mapValue: mapValue,pageId:pageId,eventId:eventId });
           reloadMap(mapJSONCode,mapValue,eventId,pageId);
           break; 
         }
@@ -163,6 +162,12 @@
     vscode.postMessage({command:'error',error: ex.message}); 
   }
   }); 
+
+  const state = vscode.getState();
+	if (state) {
+    // @ts-ignore
+    reloadMap(state.mapJSONCode,state.mapValue,state.eventId,state.pageId);
+	}
 })(); 
 
 
