@@ -68,8 +68,8 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage(e => {
 			console.log(e); 
-			//const mapObject = this.getDocumentAsJson(document);
-			// const mapData = JSON.stringify(mapObject);
+			const mapObject = this.getDocumentAsJson(document);
+			 const mapData = JSON.stringify(mapObject);
 			switch (e.command) {
 				case 'togglePlayBGM':
 				{
@@ -82,6 +82,30 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 					console.log("Updated parameters"); 
 					console.log(e.codeList);
 					this.updatePageCodes(document, e.codeList)
+					break; 
+				}
+				case 'nextPage':
+				{
+					RPGMakerMapEditorProvider.currentPageId++; 
+					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
+					break; 
+				}
+				case 'previousPage':
+				{
+					RPGMakerMapEditorProvider.currentPageId--; 
+					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
+					break; 
+				}
+				case 'nextEvent':
+				{
+					RPGMakerMapEditorProvider.currentEventId++; 
+					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
+					break; 
+				}
+				case 'previousEvent':
+				{
+					RPGMakerMapEditorProvider.currentEventId--; 
+					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
 					break; 
 				}
 				case 'error':
@@ -174,6 +198,8 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 				</div> 
 				<br/>
 				<br/>
+				<button id="next-event">Next Event</button> 
+				<button id="previous-event">Previous Event</button> 
 				<h3>Event Details</h3> 
 				<h4 id="eventId"/><h4>
 				<form>
@@ -226,6 +252,8 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 					</table>
 					<button id="update-codes">Update Event Code</button>
 				<label>How the event page looks in the JSON code code</label>
+				<button id="next-page">Next Page</button> 
+				<button id="previous-page">Previous Page</button> 
 				<code id="page-json"></code>
 				<p id="error-message"></p> 
 				<script nonce="${nonce}" src="${scriptUri}"></script>

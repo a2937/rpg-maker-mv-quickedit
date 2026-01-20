@@ -17,12 +17,43 @@
 
   const eventCodeUpdateButton = document.getElementById("update-codes"); 
 
+  const nextPageButton = document.getElementById("next-page"); 
+  const previousPageButton = document.getElementById("previous-page"); 
+
+  const nextEventButton = document.getElementById("next-event"); 
+  const previousEventButton = document.getElementById("previous-event"); 
+
+
 
 
   autoPlayBGMElement?.addEventListener("click", () =>
   {
       // @ts-ignore
       vscode.postMessage({"useBGM": autoPlayBGMElement?.checked, command:"togglePlayBGM"});
+  });
+
+  nextPageButton?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({command:"nextPage"});
+  });
+
+  previousPageButton?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({command:"previousPage"});
+  });
+  
+  nextEventButton?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({command:"nextEvent"});
+  });
+
+  previousEventButton?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({command:"previousEvent"});
   });
 
   eventCodeUpdateButton?.addEventListener("click", () =>
