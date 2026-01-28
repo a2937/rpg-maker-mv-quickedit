@@ -77,6 +77,17 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 					this.togglePlayBGM(document,e.useBGM);
 					break; 
 				}
+				case 'togglePlayBGS':
+				{
+					console.log("Toggled Play BGS"); 
+					this.togglePlayBGS(document,e.useBGS);
+					break; 
+				}
+				case 'setMapHeight':
+				{
+					console.log("Updated Map Height"); 
+					this.updateMapHeight(document,e.mapHeight); 
+				}
 				case 'updateParameters':
 				{
 					console.log("Updated parameters"); 
@@ -128,6 +139,20 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 	{
 		const json = this.getDocumentAsJson(document);
 		json["autoplayBgm"] = switchState;
+		return this.updateTextDocument(document, json);
+	}
+
+	private togglePlayBGS(document: vscode.TextDocument,switchState: boolean)
+	{
+		const json = this.getDocumentAsJson(document);
+		json["autoplayBgs"] = switchState;
+		return this.updateTextDocument(document, json);
+	}
+
+	private updateMapHeight(document: vscode.TextDocument, newHeight: number)
+	{
+		const json = this.getDocumentAsJson(document);
+		json["mapHeight"] = newHeight;
 		return this.updateTextDocument(document, json);
 	}
 
@@ -185,7 +210,6 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 				<h1>Map Editor</h1>
 				<h2>Overview</h2>
 				<h3>Map Details</h3> 
-				<div class="form">
 					<div>
 						<input type="checkbox" id="autoplayBGM" /> 
 						<label for="autoplayBGM">Autoplay BGM</label> 
@@ -194,15 +218,18 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 						<input type="checkbox" id="autoplayBGS" /> 
 						<label for="autoplayBGS">Autoplay BGS</label> 
 					</div>
+				<div>
+					<input type="input" id="mapHeight" min="1" /> 
+					<label for="mapHeight">Map Height</label> 
+					<button id="save-map-height">Save Map Height</button>
+				</div>
 
-				</div> 
 				<br/>
 				<br/>
 				<button id="next-event">Next Event</button> 
 				<button id="previous-event">Previous Event</button> 
 				<h3>Event Details</h3> 
 				<h4 id="eventId"/><h4>
-				<form>
 					<div>
 						<input type="text" id="event-name" /> 
 						<label for="event-name">Event Name</label>
@@ -223,22 +250,15 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 						<label for="event-y">Event Y</label>
 						<button id="save-event-name">Save Event Y</button>
 					</div>
-				</form>
 				<br/>
 				<br/>
 				<h3>Page Details</h3> 
 				<h4>Conditions</h4>
-				<form>
-
-				</form>
 				<h4>Image</h4>
-				<form>
 
-				</form>
 				<h4>Move Route</h4>
-				<form>
 
-				</form>
+
 				<h4>Event Code list</h4>
 					<table id="code-table">
 					<thead>

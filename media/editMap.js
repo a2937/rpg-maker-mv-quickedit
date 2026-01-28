@@ -7,6 +7,13 @@
 
   const autoPlayBGMElement = document.getElementById("autoplayBGM");
 
+  const autoPlayBGSElement = document.getElementById("autoplayBGS");
+
+  const mapHeightElement = document.getElementById("map-height");
+  const saveMapHeightElement = document.getElementById("save-map-height");
+
+
+
   const eventNameEditor = document.getElementById("event-name");
 
   const eventCodeTableBody = document.getElementById("event-data");  
@@ -30,6 +37,18 @@
   {
       // @ts-ignore
       vscode.postMessage({"useBGM": autoPlayBGMElement?.checked, command:"togglePlayBGM"});
+  });
+
+  autoPlayBGSElement?.addEventListener("click", () =>
+  {
+      // @ts-ignore
+      vscode.postMessage({"useBGS": autoPlayBGSElement?.checked, command:"togglePlayBGS"});
+  });
+
+  saveMapHeightElement?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({"mapHeight": mapHeightElement?.value, command:"setMapHeight"});
   });
 
   nextPageButton?.addEventListener("click", () =>
