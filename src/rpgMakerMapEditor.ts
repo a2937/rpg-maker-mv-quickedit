@@ -83,10 +83,23 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 					this.togglePlayBGS(document,e.useBGS);
 					break; 
 				}
+				case 'toggleLoopParallaxX':
+				{
+					console.log("Toggled Play BGS"); 
+					this.toggleLoopParallaxX(document,e.loopParallaxX);
+					break; 
+				}
 				case 'setMapHeight':
 				{
 					console.log("Updated Map Height"); 
 					this.updateMapHeight(document,e.mapHeight); 
+					break; 
+				}
+				case 'setMapWidth':
+				{
+					console.log("Updated Map Width"); 
+					this.updateMapWidth(document,e.mapWidth); 
+					break;
 				}
 				case 'updateParameters':
 				{
@@ -149,10 +162,25 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		return this.updateTextDocument(document, json);
 	}
 
+	private toggleLoopParallaxX(document: vscode.TextDocument,doLoopX: boolean)
+	{
+		const json = this.getDocumentAsJson(document);
+		json["parallaxLoopX"] = doLoopX;
+		return this.updateTextDocument(document, json);
+	}
+
+
 	private updateMapHeight(document: vscode.TextDocument, newHeight: number)
 	{
 		const json = this.getDocumentAsJson(document);
-		json["mapHeight"] = newHeight;
+		json["height"] = newHeight;
+		return this.updateTextDocument(document, json);
+	}
+
+	private updateMapWidth(document: vscode.TextDocument, newWidth: number)
+	{
+		const json = this.getDocumentAsJson(document);
+		json["width"] = newWidth;
 		return this.updateTextDocument(document, json);
 	}
 
@@ -218,11 +246,21 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 						<input type="checkbox" id="autoplayBGS" /> 
 						<label for="autoplayBGS">Autoplay BGS</label> 
 					</div>
-				<div>
-					<input type="input" id="mapHeight" min="1" /> 
-					<label for="mapHeight">Map Height</label> 
-					<button id="save-map-height">Save Map Height</button>
-				</div>
+					<div>
+						<input type="input" id="mapHeight" min="1" /> 
+						<label for="mapHeight">Map Height</label> 
+						<button id="save-map-height">Save Map Height</button>
+					</div>
+					<div>
+						<input type="input" id="mapWidth" min="1" /> 
+						<label for="mapWidth">Map Width</label> 
+						<button id="save-map-width">Save Map Width</button>
+					</div>
+					<div>
+						<input type="checkbox" id="loopParallaxX" /> 
+						<label for="loopParallaxX">Loop Parallax X</label> 
+					</div>
+
 
 				<br/>
 				<br/>

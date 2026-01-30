@@ -9,10 +9,14 @@
 
   const autoPlayBGSElement = document.getElementById("autoplayBGS");
 
+  const loopParallaxXElement = document.getElementById("loopParallaxX");
+  const loopParallaxYElement = document.getElementById("loopParallaxY");
+
   const mapHeightElement = document.getElementById("map-height");
   const saveMapHeightElement = document.getElementById("save-map-height");
 
-
+  const mapWidthElement = document.getElementById("map-width");
+  const saveMapWidthElement = document.getElementById("save-map-width");
 
   const eventNameEditor = document.getElementById("event-name");
 
@@ -45,10 +49,28 @@
       vscode.postMessage({"useBGS": autoPlayBGSElement?.checked, command:"togglePlayBGS"});
   });
 
+  loopParallaxXElement?.addEventListener("click", () =>
+  {
+      // @ts-ignore
+      vscode.postMessage({"loopParallaxX": loopParallaxXElement?.checked, command:"toggleLoopParallaxX"});
+  });
+  
+  loopParallaxXElement?.addEventListener("click", () =>
+  {
+      // @ts-ignore
+      vscode.postMessage({"loopParallaxY": loopParallaxYElement?.checked, command:"toggleLoopParallaxY"});
+  });
+
   saveMapHeightElement?.addEventListener("click", () =>
   {
     // @ts-ignore
     vscode.postMessage({"mapHeight": mapHeightElement?.value, command:"setMapHeight"});
+  });
+
+  saveMapWidthElement?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({"mapWidth": mapWidthElement?.value, command:"setMapWidth"});
   });
 
   nextPageButton?.addEventListener("click", () =>
@@ -112,6 +134,23 @@
          
         // @ts-ignore
         autoPlayBGMElement.checked = mapValue["autoplayBgm"] == true;
+
+        // @ts-ignore
+        autoPlayBGSElement.checked = mapValue["autoplayBgs"] == true;
+
+        // @ts-ignore
+        loopParallaxXElement.checked = mapValue["parallaxLoopX"] == true;
+
+        // @ts-ignore
+        loopParallaxYElement.checked = mapValue["parallaxLoopY"] == true;
+
+        // @ts-ignore
+        mapHeightElement.value = mapValue["height"]; 
+
+        
+        // @ts-ignore
+        mapWidthElement.value = mapValue["width"]; 
+
       
         // @ts-ignore
         if(mapValue.events[eventId] == null)
