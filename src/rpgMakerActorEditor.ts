@@ -62,7 +62,6 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 
 		// Receive message from the webview.
 		webviewPanel.webview.onDidReceiveMessage(e => {
-			console.log(e); 
 			switch (e.command) {
                 case 'updateActorName':
 				{
@@ -206,7 +205,6 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 				<h2 id="actor-id"></h2>
 				<div class="form">
 					<div>
-						
 						<input type="text" id="name" /> 
 						<label for="name">Name</label>
 						<button id="save-name">Save Name</button>

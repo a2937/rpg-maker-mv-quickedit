@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { RPGMakerActorEditorProvider } from './rpgMakerActorEditor';
+import { RPGMakerMapEditorProvider } from './rpgMakerMapEditor';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -16,6 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// The commandId parameter must match the command field in package.json		
 
 	context.subscriptions.push(RPGMakerActorEditorProvider.register(context));
+
+	context.subscriptions.push(RPGMakerMapEditorProvider.register(context));
 }
 
 // This method is called when your extension is deactivated
