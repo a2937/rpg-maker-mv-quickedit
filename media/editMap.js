@@ -11,12 +11,18 @@
 
   const loopParallaxXElement = document.getElementById("loopParallaxX");
   const loopParallaxYElement = document.getElementById("loopParallaxY");
+  
+  const parallaxNameElement = document.getElementById("parallaxName");
+  const saveParallaxNameElement = document.getElementById("save-parallax-name");
 
   const mapHeightElement = document.getElementById("map-height");
   const saveMapHeightElement = document.getElementById("save-map-height");
 
   const mapWidthElement = document.getElementById("map-width");
   const saveMapWidthElement = document.getElementById("save-map-width");
+
+  const tilesetIDElement = document.getElementById("tileset-id");
+  const savetilesetIDElement = document.getElementById("save-tileset-id");
 
   const eventNameEditor = document.getElementById("event-name");
 
@@ -27,6 +33,12 @@
   const errorElement = document.getElementById("error-message"); 
 
   const eventCodeUpdateButton = document.getElementById("update-codes"); 
+
+  const eventXElement = document.getElementById("event-x"); 
+  const saveEventXButton = document.getElementById("save-event-x");
+
+  const eventYElement = document.getElementById("event-y"); 
+  const saveEventYButton = document.getElementById("save-event-y");
 
   const nextPageButton = document.getElementById("next-page"); 
   const previousPageButton = document.getElementById("previous-page"); 
@@ -73,10 +85,34 @@
     vscode.postMessage({"mapWidth": mapWidthElement?.value, command:"setMapWidth"});
   });
 
+  savetilesetIDElement?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({"tilesetID": tilesetIDElement?.value, command:"setTilesetID"});
+  });
+
   nextPageButton?.addEventListener("click", () =>
   {
     // @ts-ignore
     vscode.postMessage({command:"nextPage"});
+  });
+
+  saveParallaxNameElement?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({"parallaxName": parallaxNameElement?.value, command:"setParallaxName"});
+  });
+
+  saveEventXButton?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({"x": eventXElement?.value, command:"setEventX"});
+  });
+
+  saveEventYButton?.addEventListener("click", () =>
+  {
+    // @ts-ignore
+    vscode.postMessage({"y": eventXElement?.value, command:"setEventY"});
   });
 
   previousPageButton?.addEventListener("click", () =>
@@ -96,6 +132,7 @@
     // @ts-ignore
     vscode.postMessage({command:"previousEvent"});
   });
+
 
   eventCodeUpdateButton?.addEventListener("click", () =>
   {
@@ -145,6 +182,12 @@
         loopParallaxYElement.checked = mapValue["parallaxLoopY"] == true;
 
         // @ts-ignore
+        parallaxNameElement.value  = mapValue["parallaxName"].trim(); 
+
+        // @ts-ignore
+        tilesetIDElement.value = mapValue["tilesetId"]; 
+
+        // @ts-ignore
         mapHeightElement.value = mapValue["height"]; 
 
         
@@ -162,6 +205,12 @@
 
         // @ts-ignore
         eventNameEditor.value = event.name; 
+
+        // @ts-ignore
+        eventXElement.value = event.x; 
+
+        // @ts-ignore
+        eventYElement.value = event.y; 
 
 
         const page = event.pages[pageId]; 
@@ -242,10 +291,10 @@
   {   
      console.log(ex); 
     // @ts-ignore
-    errorElement.innerText = ex; 
+    errorElement.innerText = ex.message; 
 
     // @ts-ignore
-    vscode.postMessage({command:'error',error: ex.message}); 
+    vscode.postMessage({command:'error',error: ex.stack}); 
   }
   }); 
 

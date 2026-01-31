@@ -85,8 +85,14 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 				}
 				case 'toggleLoopParallaxX':
 				{
-					console.log("Toggled Play BGS"); 
+					console.log("Toggled Loop Parallax X"); 
 					this.toggleLoopParallaxX(document,e.loopParallaxX);
+					break; 
+				}
+				case 'toggleLoopParallaxY':
+				{
+					console.log("Toggled Loop Parallax Y"); 
+					this.toggleLoopParallaxY(document,e.loopParallaxY);
 					break; 
 				}
 				case 'setMapHeight':
@@ -99,6 +105,30 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 				{
 					console.log("Updated Map Width"); 
 					this.updateMapWidth(document,e.mapWidth); 
+					break;
+				}
+				case 'setTilesetID':
+				{
+					console.log("Updated Tileset ID"); 
+					this.updateTilesetID(document,e.tilesetID); 
+					break;
+				}
+				case 'setParallaxName':
+				{
+					console.log("Set Parallax Name"); 
+					this.updateParallaxName(document,e.parallaxName); 
+					break;
+				}
+				case 'setEventX':
+				{
+					console.log("Set Event X"); 
+					this.updateEventX(document,e.x); 
+					break;
+				}
+				case 'setEventY':
+				{
+					console.log("Set Event Y"); 
+					this.updateEventY(document,e.y); 
 					break;
 				}
 				case 'updateParameters':
@@ -148,6 +178,13 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		updateWebview();
 	}
 
+
+	private updateTilesetID(document: vscode.TextDocument, tilesetID: number) {
+		const json = this.getDocumentAsJson(document);
+		json["tilesetId"] = tilesetID;
+		return this.updateTextDocument(document, json);
+	}
+
 	private togglePlayBGM(document: vscode.TextDocument,switchState: boolean)
 	{
 		const json = this.getDocumentAsJson(document);
@@ -169,6 +206,13 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		return this.updateTextDocument(document, json);
 	}
 
+	private toggleLoopParallaxY(document: vscode.TextDocument,doLoopY: boolean)
+	{
+		const json = this.getDocumentAsJson(document);
+		json["parallaxLoopY"] = doLoopY;
+		return this.updateTextDocument(document, json);
+	}
+
 
 	private updateMapHeight(document: vscode.TextDocument, newHeight: number)
 	{
@@ -183,6 +227,29 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		json["width"] = newWidth;
 		return this.updateTextDocument(document, json);
 	}
+
+	private updateParallaxName(document: vscode.TextDocument, newParallaxName: string)
+	{
+		const json = this.getDocumentAsJson(document);
+		json["parallaxName"] = newParallaxName;
+		return this.updateTextDocument(document, json);
+	}
+
+	private updateEventX(document: vscode.TextDocument, eventX: number)
+	{
+		const json = this.getDocumentAsJson(document);
+		json.events[RPGMakerMapEditorProvider.currentEventId]["x"] = eventX;
+		return this.updateTextDocument(document, json);
+	}
+
+	private updateEventY(document: vscode.TextDocument, eventY: number)
+	{
+		const json = this.getDocumentAsJson(document);
+		json.events[RPGMakerMapEditorProvider.currentEventId]["y"] = eventY; 
+		return this.updateTextDocument(document, json);
+	}
+
+
 
 	private updatePageCodes(document: vscode.TextDocument, codeList: any)
 	{
@@ -247,18 +314,32 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 						<label for="autoplayBGS">Autoplay BGS</label> 
 					</div>
 					<div>
-						<input type="input" id="mapHeight" min="1" /> 
-						<label for="mapHeight">Map Height</label> 
+						<input type="number" id="map-height" min="1" /> 
+						<label for="map-height">Map Height</label> 
 						<button id="save-map-height">Save Map Height</button>
 					</div>
 					<div>
-						<input type="input" id="mapWidth" min="1" /> 
-						<label for="mapWidth">Map Width</label> 
+						<input type="number" id="map-width" min="1" /> 
+						<label for="map-width">Map Width</label> 
 						<button id="save-map-width">Save Map Width</button>
 					</div>
 					<div>
 						<input type="checkbox" id="loopParallaxX" /> 
 						<label for="loopParallaxX">Loop Parallax X</label> 
+					</div>
+					<div>
+						<input type="checkbox" id="loopParallaxY" /> 
+						<label for="loopParallaxX">Loop Parallax Y</label> 
+					</div>
+					<div>
+						<input type="input" id="parallaxName" /> 
+						<label for="parallaxName">Parallax Name</label> 
+						<button id="save-parallax-name">Save Parallax Name</button>
+					</div>
+					<div>
+						<input type="number" id="tileset-id" min=1 /> 
+						<label for="tileset-id">Tileset ID</label> 
+						<button id="save-tileset-id">Save Tileset ID</button>
 					</div>
 
 
@@ -281,12 +362,12 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 					<div>
 						<input type="number" id="event-x" /> 
 						<label for="event-x">Event X</label>
-						<button id="save-event-name">Save Event X</button>
+						<button id="save-event-x">Save Event X</button>
 					</div>
 					<div>
 						<input type="number" id="event-y" /> 
 						<label for="event-y">Event Y</label>
-						<button id="save-event-name">Save Event Y</button>
+						<button id="save-event-y">Save Event Y</button>
 					</div>
 				<br/>
 				<br/>
