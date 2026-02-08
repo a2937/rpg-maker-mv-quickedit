@@ -36,6 +36,16 @@
           }
         ],
         "priority": "default"
+      },
+      {
+        "viewType": "rpg-maker-mv-mz-quick-edit-tools.commonEventEditor",
+        "displayName": "Common Event Editor",
+        "selector": [
+          {
+            "filenamePattern": "CommonEvents.json"
+          }
+        ],
+        "priority": "default"
       }
     ]
   },
