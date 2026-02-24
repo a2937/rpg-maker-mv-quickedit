@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 import { getNonce } from "./util";
 
-export class RPGMakerActorEditorProvider
+export class RPGMakerSkillEditorProvider
   implements vscode.CustomTextEditorProvider
 {
   public static register(context: vscode.ExtensionContext): vscode.Disposable {
-    const provider = new RPGMakerActorEditorProvider(context);
+    const provider = new RPGMakerSkillEditorProvider(context);
     const providerRegistration = vscode.window.registerCustomEditorProvider(
-      RPGMakerActorEditorProvider.viewType,
+      RPGMakerSkillEditorProvider.viewType,
       provider,
     );
     return providerRegistration;
@@ -16,9 +16,9 @@ export class RPGMakerActorEditorProvider
   constructor(private readonly context: vscode.ExtensionContext) {}
 
   private static readonly viewType =
-    "rpg-maker-mv-mz-quick-edit-tools.actorEditor";
+    "rpg-maker-mv-mz-quick-edit-tools.skillEditor";
 
-  private static currentActorId = 1;
+  private static currentSkillId = 1;
 
   /**
    * Called when our custom editor is opened.
@@ -40,7 +40,7 @@ export class RPGMakerActorEditorProvider
       webviewPanel.webview.postMessage({
         command: "update",
         text: document.getText(),
-        actorId: RPGMakerActorEditorProvider.currentActorId,
+        SkillId: RPGMakerSkillEditorProvider.currentSkillId,
       });
     }
 
@@ -68,72 +68,62 @@ export class RPGMakerActorEditorProvider
     // Receive message from the webview.
     webviewPanel.webview.onDidReceiveMessage((e) => {
       switch (e.command) {
-        case "updateActorName": {
+        case "updateSkillName": {
           console.log("Updated name");
-          this.updateActorName(document, e.newName.trim());
+          this.updateSkillName(document, e.newName.trim());
           break;
         }
-        case "updateActorNickname": {
-          console.log("Updated nickname");
-          this.updateActorNickname(document, e.newNickName.trim());
-          break;
-        }
-        case "updateFace": {
-          console.log("Updated face");
-          this.updateActorFace(document, e.newFace);
-          break;
-        }
-        case "sendActorData": {
-          console.log("Sent actordata");
-          RPGMakerActorEditorProvider.currentActorId = e.selectedActor;
-          const actorData =
+        case "sendSkillData": {
+          console.log("Sent Skilldata");
+          RPGMakerSkillEditorProvider.currentSkillId = e.selectedSkill;
+          const SkillData =
             this.getDocumentAsJson(document)[
-              RPGMakerActorEditorProvider.currentActorId
+              RPGMakerSkillEditorProvider.currentSkillId
             ];
           webviewPanel.webview.postMessage({
-            actorData: JSON.stringify(actorData),
-            command: "loadActor",
+            SkillData: JSON.stringify(SkillData),
+            command: "loadSkill",
           });
           break;
         }
-        case "nextActor": {
-          console.log("Getting next actor");
-          let actorList = this.getDocumentAsJson(document);
+        case "nextSkill": {
+          console.log("Getting next Skill");
+          let SkillList = this.getDocumentAsJson(document);
           if (
-            RPGMakerActorEditorProvider.currentActorId + 1 >
-            actorList.length
+            RPGMakerSkillEditorProvider.currentSkillId + 1 >
+            SkillList.length
           ) {
             console.log("Out of bounds error");
             // TODO: Make a nice error here
             return;
           } else {
-            RPGMakerActorEditorProvider.currentActorId++;
-            const actorData = JSON.stringify(
-              actorList[RPGMakerActorEditorProvider.currentActorId],
+            RPGMakerSkillEditorProvider.currentSkillId++;
+            const SkillData = JSON.stringify(
+              SkillList[RPGMakerSkillEditorProvider.currentSkillId],
             );
-            console.log("Actor Chosen: " + actorData);
+            console.log("Skill Chosen: " + SkillData);
             webviewPanel.webview.postMessage({
-              actorData: actorData,
-              command: "loadActor",
+              SkillData: SkillData,
+              command: "loadSkill",
             });
           }
           break;
         }
-        case "previousActor": {
-          console.log("Getting previous actor");
-          if (RPGMakerActorEditorProvider.currentActorId - 1 <= 0) {
+        case "previousSkill": {
+          console.log("Getting previous Skill");
+          if (RPGMakerSkillEditorProvider.currentSkillId - 1 <= 0) {
             console.error("Out of bounds error");
             // TODO: Make a nice error here
             return;
           } else {
-            RPGMakerActorEditorProvider.currentActorId--;
-            const actorData =
+            RPGMakerSkillEditorProvider.currentSkillId--;
+            const SkillData =
               this.getDocumentAsJson(document)[
-                RPGMakerActorEditorProvider.currentActorId
+                RPGMakerSkillEditorProvider.currentSkillId
               ];
             webviewPanel.webview.postMessage({
-              actorData: JSON.stringify(actorData),
-              command: "loadActor",
+              SkillData: JSON.stringify(SkillData),
+              command: "loadSkill",
             });
           }
           break;
@@ -147,21 +137,9 @@ export class RPGMakerActorEditorProvider
     updateWebview();
   }
 
-  private updateActorName(document: vscode.TextDocument, newName: string) {
+  private updateSkillName(document: vscode.TextDocument, newName: string) {
     const json = this.getDocumentAsJson(document);
-    json[RPGMakerActorEditorProvider.currentActorId]["name"] = newName;
-    return this.updateTextDocument(document, json);
-  }
-
-  private updateActorNickname(document: vscode.TextDocument, newName: string) {
-    const json = this.getDocumentAsJson(document);
-    json[RPGMakerActorEditorProvider.currentActorId]["nickname"] = newName;
-    return this.updateTextDocument(document, json);
-  }
-
-  private updateActorFace(document: vscode.TextDocument, newFace: number) {
-    const json = this.getDocumentAsJson(document);
-    json[RPGMakerActorEditorProvider.currentActorId]["faceIndex"] = newFace;
+    json[RPGMakerSkillEditorProvider.currentSkillId]["name"] = newName;
     return this.updateTextDocument(document, json);
   }
 
@@ -171,7 +149,7 @@ export class RPGMakerActorEditorProvider
   private getHtmlForWebview(webview: vscode.Webview): string {
     // Local path to script and css for the webview
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, "media", "editActor.js"),
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "editSkill.js"),
     );
 
     const styleResetUri = webview.asWebviewUri(
@@ -183,7 +161,7 @@ export class RPGMakerActorEditorProvider
     );
 
     const styleMainUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, "media", "editActor.css"),
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "editSkill.css"),
     );
 
     // Use a nonce to whitelist which scripts can be run
@@ -207,38 +185,29 @@ export class RPGMakerActorEditorProvider
 				<link href="${styleVSCodeUri}" rel="stylesheet" />
 				<link href="${styleMainUri}" rel="stylesheet" />
 
-				<title>RPG MV/MZ Actor Editor</title>
+				<title>RPG MV/MZ Skill Editor</title>
 			</head>
 			<body>
-				<h1>Actor Editor</h1>
-				<h2 id="actor-id"></h2>
+				<h1>Skill Editor</h1>
+				<h2 id="Skill-id"></h2>
 				<div class="form">
 					<div>
 						<input type="text" id="name" /> 
 						<label for="name">Name</label>
 						<button id="save-name">Save Name</button>
 					</div>
+
 					<div>
-						<input type="text" id="nickname" /> 
-						<label for="nickname">Nickname</label>
-						<button id="save-nickname">Save Nickname</button>
+						<input min="1" type="number" id="choose-Skill" value=1 />
+						<label for="choose-Skill">Jump to Skill id</label>
 					</div>
 					<div>
-						<input type="number" id="face-index" /> 
-						<label for="face-index">Face index</label>
-						<button id="save-face">Save Face Index</button>
-					</div>
-					<div>
-						<input min="1" type="number" id="choose-actor" value=1 />
-						<label for="choose-actor">Jump to actor id</label>
-					</div>
-					<div>
-						<button id="next-actor">Next Actor</div>
-						<button id="previous-actor">Previous Actor</div>
+						<button id="next-Skill">Next Skill</div>
+						<button id="previous-Skill">Previous Skill</div>
 					</div>
 				</div> 
-				<label>How the actor looks in the JSON code code</label>
-				<code id="actor-json"></code>
+				<label>How the Skill looks in the JSON code code</label>
+				<code id="Skill-json"></code>
 				<p id="error-message"></p> 
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>

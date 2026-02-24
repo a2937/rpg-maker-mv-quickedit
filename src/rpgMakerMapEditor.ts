@@ -1,287 +1,286 @@
-import * as vscode from 'vscode';
-import { getNonce } from './util';
+import * as vscode from "vscode";
+import { getNonce } from "./util";
 
-export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvider {
+export class RPGMakerMapEditorProvider
+  implements vscode.CustomTextEditorProvider
+{
+  public static register(context: vscode.ExtensionContext): vscode.Disposable {
+    const provider = new RPGMakerMapEditorProvider(context);
+    const providerRegistration = vscode.window.registerCustomEditorProvider(
+      RPGMakerMapEditorProvider.viewType,
+      provider,
+    );
+    return providerRegistration;
+  }
 
-    public static register(context: vscode.ExtensionContext): vscode.Disposable {
-		const provider = new RPGMakerMapEditorProvider(context);
-		const providerRegistration = vscode.window.registerCustomEditorProvider(RPGMakerMapEditorProvider.viewType, provider);
-		return providerRegistration;
-	}
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
-	constructor(
-		private readonly context: vscode.ExtensionContext
-	) { }
+  private static readonly viewType =
+    "rpg-maker-mv-mz-quick-edit-tools.mapEditor";
 
-    private static readonly viewType = 'rpg-maker-mv-mz-quick-edit-tools.mapEditor';
+  private static currentEventId = 1;
 
-	private static currentEventId = 1; 
+  private static currentPageId = 0;
 
-	
-	private static currentPageId = 0; 
+  /**
+   * Called when our custom editor is opened.
+   *
+   *
+   */
+  public async resolveCustomTextEditor(
+    document: vscode.TextDocument,
+    webviewPanel: vscode.WebviewPanel,
+    _token: vscode.CancellationToken,
+  ): Promise<void> {
+    // Setup initial content for the webview
+    webviewPanel.webview.options = {
+      enableScripts: true,
+    };
+    webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
-    /**
-	 * Called when our custom editor is opened.
-	 * 
-	 * 
-	 */
-    public async resolveCustomTextEditor(
-		document: vscode.TextDocument,
-		webviewPanel: vscode.WebviewPanel,
-		_token: vscode.CancellationToken
-	): Promise<void> {
-		// Setup initial content for the webview
-		webviewPanel.webview.options = {
-			enableScripts: true,
-		};
-		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
+    function updateWebview() {
+      console.log("Sending map JSON from update");
+      webviewPanel.webview.postMessage({
+        command: "update",
+        text: document.getText(),
+        eventId: RPGMakerMapEditorProvider.currentEventId,
+        pageId: RPGMakerMapEditorProvider.currentPageId,
+      });
+    }
 
-		function updateWebview() {
-			console.log("Sending map JSON from update");
-			webviewPanel.webview.postMessage({
-				command: 'update',
-				text: document.getText(),
-				eventId: RPGMakerMapEditorProvider.currentEventId,
-				pageId: RPGMakerMapEditorProvider.currentPageId
-			});
-		}
+    // Hook up event handlers so that we can synchronize the webview with the text document.
+    //
+    // The text document acts as our model, so we have to sync change in the document to our
+    // editor and sync changes in the editor back to the document.
+    //
+    // Remember that a single text document can also be shared between multiple custom
+    // editors (this happens for example when you split a custom editor)
 
-		// Hook up event handlers so that we can synchronize the webview with the text document.
-		//
-		// The text document acts as our model, so we have to sync change in the document to our
-		// editor and sync changes in the editor back to the document.
-		// 
-		// Remember that a single text document can also be shared between multiple custom
-		// editors (this happens for example when you split a custom editor)
+    const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
+      (e) => {
+        if (e.document.uri.toString() === document.uri.toString()) {
+          updateWebview();
+        }
+      },
+    );
 
-		const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
-			if (e.document.uri.toString() === document.uri.toString()) {
-				updateWebview();
-			}
-		});
+    // Make sure we get rid of the listener when our editor is closed.
+    webviewPanel.onDidDispose(() => {
+      changeDocumentSubscription.dispose();
+    });
 
-		// Make sure we get rid of the listener when our editor is closed.
-		webviewPanel.onDidDispose(() => {
-			changeDocumentSubscription.dispose();
-		});
+    // Receive message from the webview.
+    webviewPanel.webview.onDidReceiveMessage((e) => {
+      console.log(e);
+      const mapObject = this.getDocumentAsJson(document);
+      const mapData = JSON.stringify(mapObject);
+      switch (e.command) {
+        case "togglePlayBGM": {
+          console.log("Toggled Play BGM");
+          this.togglePlayBGM(document, e.useBGM);
+          break;
+        }
+        case "togglePlayBGS": {
+          console.log("Toggled Play BGS");
+          this.togglePlayBGS(document, e.useBGS);
+          break;
+        }
+        case "toggleLoopParallaxX": {
+          console.log("Toggled Loop Parallax X");
+          this.toggleLoopParallaxX(document, e.loopParallaxX);
+          break;
+        }
+        case "toggleLoopParallaxY": {
+          console.log("Toggled Loop Parallax Y");
+          this.toggleLoopParallaxY(document, e.loopParallaxY);
+          break;
+        }
+        case "setMapHeight": {
+          console.log("Updated Map Height");
+          this.updateMapHeight(document, e.mapHeight);
+          break;
+        }
+        case "setMapWidth": {
+          console.log("Updated Map Width");
+          this.updateMapWidth(document, e.mapWidth);
+          break;
+        }
+        case "setTilesetID": {
+          console.log("Updated Tileset ID");
+          this.updateTilesetID(document, e.tilesetID);
+          break;
+        }
+        case "setParallaxName": {
+          console.log("Set Parallax Name");
+          this.updateParallaxName(document, e.parallaxName);
+          break;
+        }
+        case "setEventX": {
+          console.log("Set Event X");
+          this.updateEventX(document, e.x);
+          break;
+        }
+        case "setEventY": {
+          console.log("Set Event Y");
+          this.updateEventY(document, e.y);
+          break;
+        }
+        case "updateParameters": {
+          console.log("Updated parameters");
+          console.log(e.codeList);
+          this.updatePageCodes(document, e.codeList);
+          break;
+        }
+        case "nextPage": {
+          RPGMakerMapEditorProvider.currentPageId++;
+          webviewPanel.webview.postMessage({
+            mapData: mapData,
+            command: "loadMap",
+            pageId: RPGMakerMapEditorProvider.currentPageId,
+            eventId: RPGMakerMapEditorProvider.currentEventId,
+          });
+          break;
+        }
+        case "previousPage": {
+          RPGMakerMapEditorProvider.currentPageId--;
+          webviewPanel.webview.postMessage({
+            mapData: mapData,
+            command: "loadMap",
+            pageId: RPGMakerMapEditorProvider.currentPageId,
+            eventId: RPGMakerMapEditorProvider.currentEventId,
+          });
+          break;
+        }
+        case "nextEvent": {
+          RPGMakerMapEditorProvider.currentEventId++;
+          webviewPanel.webview.postMessage({
+            mapData: mapData,
+            command: "loadMap",
+            pageId: RPGMakerMapEditorProvider.currentPageId,
+            eventId: RPGMakerMapEditorProvider.currentEventId,
+          });
+          break;
+        }
+        case "previousEvent": {
+          RPGMakerMapEditorProvider.currentEventId--;
+          webviewPanel.webview.postMessage({
+            mapData: mapData,
+            command: "loadMap",
+            pageId: RPGMakerMapEditorProvider.currentPageId,
+            eventId: RPGMakerMapEditorProvider.currentEventId,
+          });
+          break;
+        }
+        case "error": {
+          console.log("Error");
+          console.error(e.error);
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    });
 
-		// Receive message from the webview.
-		webviewPanel.webview.onDidReceiveMessage(e => {
-			console.log(e); 
-			const mapObject = this.getDocumentAsJson(document);
-			 const mapData = JSON.stringify(mapObject);
-			switch (e.command) {
-				case 'togglePlayBGM':
-				{
-					console.log("Toggled Play BGM"); 
-					this.togglePlayBGM(document,e.useBGM);
-					break; 
-				}
-				case 'togglePlayBGS':
-				{
-					console.log("Toggled Play BGS"); 
-					this.togglePlayBGS(document,e.useBGS);
-					break; 
-				}
-				case 'toggleLoopParallaxX':
-				{
-					console.log("Toggled Loop Parallax X"); 
-					this.toggleLoopParallaxX(document,e.loopParallaxX);
-					break; 
-				}
-				case 'toggleLoopParallaxY':
-				{
-					console.log("Toggled Loop Parallax Y"); 
-					this.toggleLoopParallaxY(document,e.loopParallaxY);
-					break; 
-				}
-				case 'setMapHeight':
-				{
-					console.log("Updated Map Height"); 
-					this.updateMapHeight(document,e.mapHeight); 
-					break; 
-				}
-				case 'setMapWidth':
-				{
-					console.log("Updated Map Width"); 
-					this.updateMapWidth(document,e.mapWidth); 
-					break;
-				}
-				case 'setTilesetID':
-				{
-					console.log("Updated Tileset ID"); 
-					this.updateTilesetID(document,e.tilesetID); 
-					break;
-				}
-				case 'setParallaxName':
-				{
-					console.log("Set Parallax Name"); 
-					this.updateParallaxName(document,e.parallaxName); 
-					break;
-				}
-				case 'setEventX':
-				{
-					console.log("Set Event X"); 
-					this.updateEventX(document,e.x); 
-					break;
-				}
-				case 'setEventY':
-				{
-					console.log("Set Event Y"); 
-					this.updateEventY(document,e.y); 
-					break;
-				}
-				case 'updateParameters':
-				{
-					console.log("Updated parameters"); 
-					console.log(e.codeList);
-					this.updatePageCodes(document, e.codeList)
-					break; 
-				}
-				case 'nextPage':
-				{
-					RPGMakerMapEditorProvider.currentPageId++; 
-					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
-					break; 
-				}
-				case 'previousPage':
-				{
-					RPGMakerMapEditorProvider.currentPageId--; 
-					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
-					break; 
-				}
-				case 'nextEvent':
-				{
-					RPGMakerMapEditorProvider.currentEventId++; 
-					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
-					break; 
-				}
-				case 'previousEvent':
-				{
-					RPGMakerMapEditorProvider.currentEventId--; 
-					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
-					break; 
-				}
-				case 'error':
-				{
-					console.log("Error"); 
-					console.error(e.error);
-					break;
-				}
-				default:
-				{
-					break; 
-				}
-			}
-		});
+    updateWebview();
+  }
 
-		updateWebview();
-	}
+  private updateTilesetID(document: vscode.TextDocument, tilesetID: number) {
+    const json = this.getDocumentAsJson(document);
+    json["tilesetId"] = tilesetID;
+    return this.updateTextDocument(document, json);
+  }
 
+  private togglePlayBGM(document: vscode.TextDocument, switchState: boolean) {
+    const json = this.getDocumentAsJson(document);
+    json["autoplayBgm"] = switchState;
+    return this.updateTextDocument(document, json);
+  }
 
-	private updateTilesetID(document: vscode.TextDocument, tilesetID: number) {
-		const json = this.getDocumentAsJson(document);
-		json["tilesetId"] = tilesetID;
-		return this.updateTextDocument(document, json);
-	}
+  private togglePlayBGS(document: vscode.TextDocument, switchState: boolean) {
+    const json = this.getDocumentAsJson(document);
+    json["autoplayBgs"] = switchState;
+    return this.updateTextDocument(document, json);
+  }
 
-	private togglePlayBGM(document: vscode.TextDocument,switchState: boolean)
-	{
-		const json = this.getDocumentAsJson(document);
-		json["autoplayBgm"] = switchState;
-		return this.updateTextDocument(document, json);
-	}
+  private toggleLoopParallaxX(document: vscode.TextDocument, doLoopX: boolean) {
+    const json = this.getDocumentAsJson(document);
+    json["parallaxLoopX"] = doLoopX;
+    return this.updateTextDocument(document, json);
+  }
 
-	private togglePlayBGS(document: vscode.TextDocument,switchState: boolean)
-	{
-		const json = this.getDocumentAsJson(document);
-		json["autoplayBgs"] = switchState;
-		return this.updateTextDocument(document, json);
-	}
+  private toggleLoopParallaxY(document: vscode.TextDocument, doLoopY: boolean) {
+    const json = this.getDocumentAsJson(document);
+    json["parallaxLoopY"] = doLoopY;
+    return this.updateTextDocument(document, json);
+  }
 
-	private toggleLoopParallaxX(document: vscode.TextDocument,doLoopX: boolean)
-	{
-		const json = this.getDocumentAsJson(document);
-		json["parallaxLoopX"] = doLoopX;
-		return this.updateTextDocument(document, json);
-	}
+  private updateMapHeight(document: vscode.TextDocument, newHeight: number) {
+    const json = this.getDocumentAsJson(document);
+    json["height"] = newHeight;
+    return this.updateTextDocument(document, json);
+  }
 
-	private toggleLoopParallaxY(document: vscode.TextDocument,doLoopY: boolean)
-	{
-		const json = this.getDocumentAsJson(document);
-		json["parallaxLoopY"] = doLoopY;
-		return this.updateTextDocument(document, json);
-	}
+  private updateMapWidth(document: vscode.TextDocument, newWidth: number) {
+    const json = this.getDocumentAsJson(document);
+    json["width"] = newWidth;
+    return this.updateTextDocument(document, json);
+  }
 
+  private updateParallaxName(
+    document: vscode.TextDocument,
+    newParallaxName: string,
+  ) {
+    const json = this.getDocumentAsJson(document);
+    json["parallaxName"] = newParallaxName;
+    return this.updateTextDocument(document, json);
+  }
 
-	private updateMapHeight(document: vscode.TextDocument, newHeight: number)
-	{
-		const json = this.getDocumentAsJson(document);
-		json["height"] = newHeight;
-		return this.updateTextDocument(document, json);
-	}
+  private updateEventX(document: vscode.TextDocument, eventX: number) {
+    const json = this.getDocumentAsJson(document);
+    json.events[RPGMakerMapEditorProvider.currentEventId]["x"] = eventX;
+    return this.updateTextDocument(document, json);
+  }
 
-	private updateMapWidth(document: vscode.TextDocument, newWidth: number)
-	{
-		const json = this.getDocumentAsJson(document);
-		json["width"] = newWidth;
-		return this.updateTextDocument(document, json);
-	}
+  private updateEventY(document: vscode.TextDocument, eventY: number) {
+    const json = this.getDocumentAsJson(document);
+    json.events[RPGMakerMapEditorProvider.currentEventId]["y"] = eventY;
+    return this.updateTextDocument(document, json);
+  }
 
-	private updateParallaxName(document: vscode.TextDocument, newParallaxName: string)
-	{
-		const json = this.getDocumentAsJson(document);
-		json["parallaxName"] = newParallaxName;
-		return this.updateTextDocument(document, json);
-	}
+  private updatePageCodes(document: vscode.TextDocument, codeList: any) {
+    const json = this.getDocumentAsJson(document);
+    json.events[RPGMakerMapEditorProvider.currentEventId].pages[
+      RPGMakerMapEditorProvider.currentPageId
+    ].list = codeList;
+    return this.updateTextDocument(document, json);
+  }
 
-	private updateEventX(document: vscode.TextDocument, eventX: number)
-	{
-		const json = this.getDocumentAsJson(document);
-		json.events[RPGMakerMapEditorProvider.currentEventId]["x"] = eventX;
-		return this.updateTextDocument(document, json);
-	}
+  /**
+   * Get the static html used for the editor webviews.
+   */
+  private getHtmlForWebview(webview: vscode.Webview): string {
+    // Local path to script and css for the webview
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "editMap.js"),
+    );
 
-	private updateEventY(document: vscode.TextDocument, eventY: number)
-	{
-		const json = this.getDocumentAsJson(document);
-		json.events[RPGMakerMapEditorProvider.currentEventId]["y"] = eventY; 
-		return this.updateTextDocument(document, json);
-	}
+    const styleResetUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "reset.css"),
+    );
 
+    const styleVSCodeUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "vscode.css"),
+    );
 
+    const styleMainUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "editMap.css"),
+    );
 
-	private updatePageCodes(document: vscode.TextDocument, codeList: any)
-	{
-		const json = this.getDocumentAsJson(document);
-		json.events[RPGMakerMapEditorProvider.currentEventId].pages[RPGMakerMapEditorProvider.currentPageId].list  = codeList; 
-		return this.updateTextDocument(document, json);
-	}
+    // Use a nonce to whitelist which scripts can be run
+    const nonce = getNonce();
 
-	/**
-	 * Get the static html used for the editor webviews.
-	 */
-	private getHtmlForWebview(webview: vscode.Webview): string {
-		// Local path to script and css for the webview
-		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'editMap.js'));
-
-		const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'reset.css'));
-
-		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'vscode.css'));
-
-		
-		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'editMap.css'));
-		
-
-		// Use a nonce to whitelist which scripts can be run
-		const nonce = getNonce();
-
-
-		return /* html */`
+    return /* html */ `
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
@@ -398,40 +397,40 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
 			</html>`;
-	}
+  }
 
+  /**
+   * Try to get a current document as json text.
+   */
+  private getDocumentAsJson(document: vscode.TextDocument): any {
+    const text = document.getText();
+    if (text.trim().length === 0) {
+      return {};
+    }
 
-    /**
-	 * Try to get a current document as json text.
-	 */
-	private getDocumentAsJson(document: vscode.TextDocument): any {
-		const text = document.getText();
-		if (text.trim().length === 0) {
-			return {};
-		}
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(
+        "Could not get document as json. Content is not valid json",
+      );
+    }
+  }
 
-		try {
-			return JSON.parse(text);
-		} catch {
-			throw new Error('Could not get document as json. Content is not valid json');
-		}
-	}
+  /**
+   * Write out the json to a given document.
+   */
+  private updateTextDocument(document: vscode.TextDocument, json: any) {
+    const edit = new vscode.WorkspaceEdit();
 
-    /**
-	 * Write out the json to a given document.
-	 */
-	private updateTextDocument(document: vscode.TextDocument, json: any) {
-		const edit = new vscode.WorkspaceEdit();
+    // Just replace the entire document every time for this example extension.
+    // A more complete extension should compute minimal edits instead.
+    edit.replace(
+      document.uri,
+      new vscode.Range(0, 0, document.lineCount, 0),
+      JSON.stringify(json, null, 2),
+    );
 
-		// Just replace the entire document every time for this example extension.
-		// A more complete extension should compute minimal edits instead.
-		edit.replace(
-			document.uri,
-			new vscode.Range(0, 0, document.lineCount, 0),
-			JSON.stringify(json, null, 2));
-
-		return vscode.workspace.applyEdit(edit);
-	}
-    
-
+    return vscode.workspace.applyEdit(edit);
+  }
 }

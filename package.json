@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "publisher": "NerdyNerdExtensionPublishing",
   "private": true,
-	"license": "MIT",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.106.1"
   },
@@ -13,8 +13,8 @@
     "Other"
   ],
   "activationEvents": [],
-	"main": "./dist/desktop/extension.js",
-	"browser": "./dist/web/extension.js",
+  "main": "./dist/desktop/extension.js",
+  "browser": "./dist/web/extension.js",
   "contributes": {
     "customEditors": [
       {
@@ -36,6 +36,16 @@
           }
         ],
         "priority": "default"
+      },
+      {
+        "viewType": "rpg-maker-mv-mz-quick-edit-tools.skillEditor",
+        "displayName": "Skill Editor",
+        "selector": [
+          {
+            "filenamePattern": "Skills.json"
+          }
+        ],
+        "priority": "default"
       }
     ]
   },
@@ -49,7 +59,8 @@
     "package:web": "webpack --mode production --devtool hidden-source-map",
     "watch": "tsc -w -p ./",
     "open-in-browser": "vscode-test-web --extensionDevelopmentPath=. .",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
@@ -61,11 +72,17 @@
     "@types/webpack-env": "^1.18.8",
     "@vscode/test-web": "^0.0.74",
     "eslint": "^9.13.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "mocha": "^11.7.5",
+    "prettier": "3.8.1",
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.39.0",
     "webpack": "^5.102.1",
     "webpack-cli": "^6.0.1"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }

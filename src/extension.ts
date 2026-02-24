@@ -1,24 +1,28 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
-import { RPGMakerActorEditorProvider } from './rpgMakerActorEditor';
-import { RPGMakerMapEditorProvider } from './rpgMakerMapEditor';
+import * as vscode from "vscode";
+import { RPGMakerActorEditorProvider } from "./rpgMakerActorEditor";
+import { RPGMakerMapEditorProvider } from "./rpgMakerMapEditor";
+import { RPGMakerSkillEditorProvider } from "./rpgMakerSkillsEditor";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  // Use the console to output diagnostic information (console.log) and errors (console.error)
+  // This line of code will only be executed once when your extension is activated
+  console.log(
+    'Congratulations, your extension "rpg-maker-mv-mz-quick-edit-tools" is now active!',
+  );
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "rpg-maker-mv-mz-quick-edit-tools" is now active!');
+  // The command has been defined in the package.json file
+  // Now provide the implementation of the command with registerCommand
+  // The commandId parameter must match the command field in package.json
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json		
+  context.subscriptions.push(RPGMakerActorEditorProvider.register(context));
 
-	context.subscriptions.push(RPGMakerActorEditorProvider.register(context));
+  context.subscriptions.push(RPGMakerMapEditorProvider.register(context));
 
-	context.subscriptions.push(RPGMakerMapEditorProvider.register(context));
+  context.subscriptions.push(RPGMakerSkillEditorProvider.register(context));
 }
 
 // This method is called when your extension is deactivated
