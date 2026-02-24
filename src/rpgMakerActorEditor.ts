@@ -1,186 +1,206 @@
-import * as vscode from 'vscode';
-import { getNonce } from './util';
+import * as vscode from "vscode";
+import { getNonce } from "./util";
 
-export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvider {
+export class RPGMakerActorEditorProvider
+  implements vscode.CustomTextEditorProvider
+{
+  public static register(context: vscode.ExtensionContext): vscode.Disposable {
+    const provider = new RPGMakerActorEditorProvider(context);
+    const providerRegistration = vscode.window.registerCustomEditorProvider(
+      RPGMakerActorEditorProvider.viewType,
+      provider,
+    );
+    return providerRegistration;
+  }
 
-    public static register(context: vscode.ExtensionContext): vscode.Disposable {
-		const provider = new RPGMakerActorEditorProvider(context);
-		const providerRegistration = vscode.window.registerCustomEditorProvider(RPGMakerActorEditorProvider.viewType, provider);
-		return providerRegistration;
-	}
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
-	constructor(
-		private readonly context: vscode.ExtensionContext
-	) { }
+  private static readonly viewType =
+    "rpg-maker-mv-mz-quick-edit-tools.actorEditor";
 
-    private static readonly viewType = 'rpg-maker-mv-mz-quick-edit-tools.actorEditor';
+  private static currentActorId = 1;
 
-	private static currentActorId = 1; 
+  /**
+   * Called when our custom editor is opened.
+   *
+   *
+   */
+  public async resolveCustomTextEditor(
+    document: vscode.TextDocument,
+    webviewPanel: vscode.WebviewPanel,
+    _token: vscode.CancellationToken,
+  ): Promise<void> {
+    // Setup initial content for the webview
+    webviewPanel.webview.options = {
+      enableScripts: true,
+    };
+    webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
-    /**
-	 * Called when our custom editor is opened.
-	 * 
-	 * 
-	 */
-    public async resolveCustomTextEditor(
-		document: vscode.TextDocument,
-		webviewPanel: vscode.WebviewPanel,
-		_token: vscode.CancellationToken
-	): Promise<void> {
-		// Setup initial content for the webview
-		webviewPanel.webview.options = {
-			enableScripts: true,
-		};
-		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
-
-		function updateWebview() {
-			webviewPanel.webview.postMessage({
-				command: 'update',
-				text: document.getText(),
-				actorId: RPGMakerActorEditorProvider.currentActorId
-			});
-		}
-
-		// Hook up event handlers so that we can synchronize the webview with the text document.
-		//
-		// The text document acts as our model, so we have to sync change in the document to our
-		// editor and sync changes in the editor back to the document.
-		// 
-		// Remember that a single text document can also be shared between multiple custom
-		// editors (this happens for example when you split a custom editor)
-
-		const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
-			if (e.document.uri.toString() === document.uri.toString()) {
-				updateWebview();
-			}
-		});
-
-		// Make sure we get rid of the listener when our editor is closed.
-		webviewPanel.onDidDispose(() => {
-			changeDocumentSubscription.dispose();
-		});
-
-		// Receive message from the webview.
-		webviewPanel.webview.onDidReceiveMessage(e => {
-			switch (e.command) {
-                case 'updateActorName':
-				{
-					console.log("Updated name"); 
-					this.updateActorName(document, e.newName.trim()); 
-					break; 
-				}		
-				case 'updateActorNickname':
-				{
-					console.log("Updated nickname"); 
-					this.updateActorNickname(document, e.newNickName.trim()); 
-					break; 
-				}
-				case 'updateFace':
-				{
-					console.log("Updated face"); 
-					this.updateActorFace(document, e.newFace); 
-					break; 
-				}
-				case 'sendActorData':
-				{
-					console.log("Sent actordata"); 
-					RPGMakerActorEditorProvider.currentActorId = e.selectedActor; 
-					const actorData = this.getDocumentAsJson(document)[RPGMakerActorEditorProvider.currentActorId];
-					webviewPanel.webview.postMessage({'actorData': JSON.stringify(actorData),command: "loadActor"});
-					break; 
-				}
-                case 'nextActor':
-				{
-					console.log("Getting next actor"); 
-					let actorList = this.getDocumentAsJson(document);
-					if(RPGMakerActorEditorProvider.currentActorId + 1 > actorList.length )
-					{
-						console.log("Out of bounds error"); 
-						// TODO: Make a nice error here 
-						return; 
-					}
-					else 
-					{
-						RPGMakerActorEditorProvider.currentActorId++; 
-						const actorData = JSON.stringify(actorList[RPGMakerActorEditorProvider.currentActorId]);
-						console.log("Actor Chosen: " + actorData); 
-						webviewPanel.webview.postMessage({'actorData': actorData,command: "loadActor"});
-					}
-					break; 
-				}
-                case 'previousActor':
-				{
-						console.log("Getting previous actor"); 
-						if(RPGMakerActorEditorProvider.currentActorId - 1 <= 0 )
-						{
-							console.error("Out of bounds error"); 
-							// TODO: Make a nice error here 
-							return; 
-						}
-						else 
-						{
-							RPGMakerActorEditorProvider.currentActorId--; 
-							const actorData = this.getDocumentAsJson(document)[RPGMakerActorEditorProvider.currentActorId];
-							webviewPanel.webview.postMessage({'actorData': JSON.stringify(actorData),command: "loadActor"});
-						}
-					break; 
-				}
-				default:
-				{
-					break; 
-				}
-			}
-		});
-
-		updateWebview();
-	}
-
-    private updateActorName(document: vscode.TextDocument, newName: string)
-    {
-        const json = this.getDocumentAsJson(document);
-        json[RPGMakerActorEditorProvider.currentActorId]["name"] = newName; 
-        return this.updateTextDocument(document, json);
+    function updateWebview() {
+      webviewPanel.webview.postMessage({
+        command: "update",
+        text: document.getText(),
+        actorId: RPGMakerActorEditorProvider.currentActorId,
+      });
     }
 
-	private updateActorNickname(document: vscode.TextDocument, newName: string)
-    {
-        const json = this.getDocumentAsJson(document);
-        json[RPGMakerActorEditorProvider.currentActorId]["nickname"] = newName; 
-        return this.updateTextDocument(document, json);
-    }
+    // Hook up event handlers so that we can synchronize the webview with the text document.
+    //
+    // The text document acts as our model, so we have to sync change in the document to our
+    // editor and sync changes in the editor back to the document.
+    //
+    // Remember that a single text document can also be shared between multiple custom
+    // editors (this happens for example when you split a custom editor)
 
-	private updateActorFace(document: vscode.TextDocument, newFace: number)
-    {
-        const json = this.getDocumentAsJson(document);
-        json[RPGMakerActorEditorProvider.currentActorId]["faceIndex"] = newFace; 
-        return this.updateTextDocument(document, json);
-    }
+    const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
+      (e) => {
+        if (e.document.uri.toString() === document.uri.toString()) {
+          updateWebview();
+        }
+      },
+    );
 
+    // Make sure we get rid of the listener when our editor is closed.
+    webviewPanel.onDidDispose(() => {
+      changeDocumentSubscription.dispose();
+    });
 
-	/**
-	 * Get the static html used for the editor webviews.
-	 */
-	private getHtmlForWebview(webview: vscode.Webview): string {
-		// Local path to script and css for the webview
-		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'editActor.js'));
+    // Receive message from the webview.
+    webviewPanel.webview.onDidReceiveMessage((e) => {
+      switch (e.command) {
+        case "updateActorName": {
+          console.log("Updated name");
+          this.updateActorName(document, e.newName.trim());
+          break;
+        }
+        case "updateActorNickname": {
+          console.log("Updated nickname");
+          this.updateActorNickname(document, e.newNickName.trim());
+          break;
+        }
+        case "updateActorNote": {
+          console.log("Updated note");
+          this.updateActorNote(document, e.newNote.trim());
+          break;
+        }
+        case "updateFace": {
+          console.log("Updated face");
+          this.updateActorFace(document, e.newFace);
+          break;
+        }
+        case "sendActorData": {
+          console.log("Sent actordata");
+          RPGMakerActorEditorProvider.currentActorId = e.selectedActor;
+          const actorData =
+            this.getDocumentAsJson(document)[
+              RPGMakerActorEditorProvider.currentActorId
+            ];
+          webviewPanel.webview.postMessage({
+            actorData: JSON.stringify(actorData),
+            command: "loadActor",
+          });
+          break;
+        }
+        case "nextActor": {
+          console.log("Getting next actor");
+          let actorList = this.getDocumentAsJson(document);
+          if (
+            RPGMakerActorEditorProvider.currentActorId + 1 >
+            actorList.length
+          ) {
+            console.log("Out of bounds error");
+            // TODO: Make a nice error here
+            return;
+          } else {
+            RPGMakerActorEditorProvider.currentActorId++;
+            const actorData = JSON.stringify(
+              actorList[RPGMakerActorEditorProvider.currentActorId],
+            );
+            console.log("Actor Chosen: " + actorData);
+            webviewPanel.webview.postMessage({
+              actorData: actorData,
+              command: "loadActor",
+            });
+          }
+          break;
+        }
+        case "previousActor": {
+          console.log("Getting previous actor");
+          if (RPGMakerActorEditorProvider.currentActorId - 1 <= 0) {
+            console.error("Out of bounds error");
+            // TODO: Make a nice error here
+            return;
+          } else {
+            RPGMakerActorEditorProvider.currentActorId--;
+            const actorData =
+              this.getDocumentAsJson(document)[
+                RPGMakerActorEditorProvider.currentActorId
+              ];
+            webviewPanel.webview.postMessage({
+              actorData: JSON.stringify(actorData),
+              command: "loadActor",
+            });
+          }
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    });
 
-		const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'reset.css'));
+    updateWebview();
+  }
 
-		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'vscode.css'));
+  private updateActorName(document: vscode.TextDocument, newName: string) {
+    const json = this.getDocumentAsJson(document);
+    json[RPGMakerActorEditorProvider.currentActorId]["name"] = newName;
+    return this.updateTextDocument(document, json);
+  }
 
-		
-		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'editActor.css'));
-		
+  private updateActorNickname(document: vscode.TextDocument, newName: string) {
+    const json = this.getDocumentAsJson(document);
+    json[RPGMakerActorEditorProvider.currentActorId]["nickname"] = newName;
+    return this.updateTextDocument(document, json);
+  }
 
-		// Use a nonce to whitelist which scripts can be run
-		const nonce = getNonce();
+  private updateActorFace(document: vscode.TextDocument, newFace: number) {
+    const json = this.getDocumentAsJson(document);
+    json[RPGMakerActorEditorProvider.currentActorId]["faceIndex"] = newFace;
+    return this.updateTextDocument(document, json);
+  }
 
+  private updateActorNote(document: vscode.TextDocument, newNote: string) {
+    const json = this.getDocumentAsJson(document);
+    json[RPGMakerActorEditorProvider.currentActorId]["note"] = newNote;
+    return this.updateTextDocument(document, json);
+  }
 
-		return /* html */`
+  /**
+   * Get the static html used for the editor webviews.
+   */
+  private getHtmlForWebview(webview: vscode.Webview): string {
+    // Local path to script and css for the webview
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "editActor.js"),
+    );
+
+    const styleResetUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "reset.css"),
+    );
+
+    const styleVSCodeUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "vscode.css"),
+    );
+
+    const styleMainUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "media", "editActor.css"),
+    );
+
+    // Use a nonce to whitelist which scripts can be run
+    const nonce = getNonce();
+
+    return /* html */ `
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
@@ -214,6 +234,11 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 						<label for="nickname">Nickname</label>
 						<button id="save-nickname">Save Nickname</button>
 					</div>
+          <div>
+          <input type="text" id="note" /> 
+          <label for="note">Note</label>
+          <button id="save-note">Save Note</button>
+        </div>
 					<div>
 						<input type="number" id="face-index" /> 
 						<label for="face-index">Face index</label>
@@ -234,40 +259,40 @@ export class RPGMakerActorEditorProvider implements vscode.CustomTextEditorProvi
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
 			</html>`;
-	}
+  }
 
+  /**
+   * Try to get a current document as json text.
+   */
+  private getDocumentAsJson(document: vscode.TextDocument): any {
+    const text = document.getText();
+    if (text.trim().length === 0) {
+      return {};
+    }
 
-    /**
-	 * Try to get a current document as json text.
-	 */
-	private getDocumentAsJson(document: vscode.TextDocument): any {
-		const text = document.getText();
-		if (text.trim().length === 0) {
-			return {};
-		}
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(
+        "Could not get document as json. Content is not valid json",
+      );
+    }
+  }
 
-		try {
-			return JSON.parse(text);
-		} catch {
-			throw new Error('Could not get document as json. Content is not valid json');
-		}
-	}
+  /**
+   * Write out the json to a given document.
+   */
+  private updateTextDocument(document: vscode.TextDocument, json: any) {
+    const edit = new vscode.WorkspaceEdit();
 
-    /**
-	 * Write out the json to a given document.
-	 */
-	private updateTextDocument(document: vscode.TextDocument, json: any) {
-		const edit = new vscode.WorkspaceEdit();
+    // Just replace the entire document every time for this example extension.
+    // A more complete extension should compute minimal edits instead.
+    edit.replace(
+      document.uri,
+      new vscode.Range(0, 0, document.lineCount, 0),
+      JSON.stringify(json, null, 2),
+    );
 
-		// Just replace the entire document every time for this example extension.
-		// A more complete extension should compute minimal edits instead.
-		edit.replace(
-			document.uri,
-			new vscode.Range(0, 0, document.lineCount, 0),
-			JSON.stringify(json, null, 2));
-
-		return vscode.workspace.applyEdit(edit);
-	}
-    
-
+    return vscode.workspace.applyEdit(edit);
+  }
 }
