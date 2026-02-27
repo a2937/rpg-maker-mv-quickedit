@@ -140,26 +140,37 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 				}
 				case 'nextPage':
 				{
+					console.log("Switched to next event page"); 
 					RPGMakerMapEditorProvider.currentPageId++; 
 					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
 					break; 
 				}
 				case 'previousPage':
 				{
+					console.log("Switched to previous event page"); 
 					RPGMakerMapEditorProvider.currentPageId--; 
 					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
 					break; 
 				}
 				case 'nextEvent':
 				{
+					console.log("Switched to next event"); 
 					RPGMakerMapEditorProvider.currentEventId++; 
 					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
 					break; 
 				}
 				case 'previousEvent':
 				{
+					console.log("Switched to previous event"); 
 					RPGMakerMapEditorProvider.currentEventId--; 
 					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
+					break; 
+				}
+				case 'addNewEventRow':
+				{
+					console.log("Add new event command row"); 
+					this.addNewEventRow(document); 
+					webviewPanel.webview.postMessage({'mapData': JSON.stringify(mapObject),command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
 					break; 
 				}
 				case 'error':
@@ -178,6 +189,13 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		updateWebview();
 	}
 
+
+	private addNewEventRow(document: vscode.TextDocument)
+	{
+		const json = this.getDocumentAsJson(document);
+		json.events[RPGMakerMapEditorProvider.currentEventId].pages[RPGMakerMapEditorProvider.currentPageId].list.push({code:0,indent:0,parameters:[]});
+		return this.updateTextDocument(document, json);
+	}
 
 	private updateTilesetID(document: vscode.TextDocument, tilesetID: number) {
 		const json = this.getDocumentAsJson(document);
@@ -389,6 +407,7 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 						
 					</tbody>
 					</table>
+					<button id="new-event-code">New event code</button>
 					<button id="update-codes">Update Event Code</button>
 				<label>How the event page looks in the JSON code code</label>
 				<button id="next-page">Next Page</button> 

@@ -1,6 +1,7 @@
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
 
+
 (function () 
 {
   const vscode = acquireVsCodeApi();
@@ -46,8 +47,13 @@
   const nextEventButton = document.getElementById("next-event"); 
   const previousEventButton = document.getElementById("previous-event"); 
 
+  const newEventCodeButton = document.getElementById("new-event-code");
 
 
+  newEventCodeButton?.addEventListener("click", () =>
+  {
+    vscode.postMessage({command:"addNewEventRow"});
+  });
 
   autoPlayBGMElement?.addEventListener("click", () =>
   {
@@ -166,6 +172,7 @@
    */
   function reloadMap(mapValue,eventId,pageId) {
 
+        
         // @ts-ignore
         pageJSONCode.innerText = JSON.stringify(mapValue.events[eventId].pages[pageId],0,1.5); 
          
@@ -270,6 +277,7 @@
           const mapValue = JSON.parse(mapJSONCode); 
           const pageId = message.pageId; 
           const eventId = message.eventId; 
+          vscode.setState({mapValue: mapValue,pageId:pageId,eventId:eventId });
           reloadMap(mapValue,eventId,pageId);
           break; 
         }
