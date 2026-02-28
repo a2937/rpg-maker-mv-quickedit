@@ -173,6 +173,12 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 					webviewPanel.webview.postMessage({'mapData': JSON.stringify(mapObject),command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
 					break; 
 				}
+				case 'deleteEventRow':
+				{
+					console.log("Delete new event command row");
+					this.removeEventRow(document,e.rowId);  	
+					webviewPanel.webview.postMessage({'mapData': mapData,command: "loadMap", pageId: RPGMakerMapEditorProvider.currentPageId, eventId: RPGMakerMapEditorProvider.currentEventId});
+				}
 				case 'error':
 				{
 					console.log("Error"); 
@@ -267,6 +273,13 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 		return this.updateTextDocument(document, json);
 	}
 
+
+	private removeEventRow(document: vscode.TextDocument, rowId: number)
+	{
+		const json = this.getDocumentAsJson(document);
+		json.events[RPGMakerMapEditorProvider.currentEventId].pages[RPGMakerMapEditorProvider.currentPageId].list.splice(rowId,1); 
+		return this.updateTextDocument(document, json);
+	}
 
 
 	private updatePageCodes(document: vscode.TextDocument, codeList: any)

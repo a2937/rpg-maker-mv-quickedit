@@ -228,6 +228,17 @@
         {
           const newTableRow = document.createElement("tr");
         
+          const deleteButtonHolder = document.createElement("td");
+          const deleteButton = document.createElement("input");
+          deleteButton.type= "button"; 
+          deleteButton.innerText = "X"; 
+          deleteButton.addEventListener("click", () =>
+          {
+            vscode.postMessage({command:"deleteEventRow", rowId: row});
+          });
+
+          deleteButtonHolder.appendChild(deleteButton); 
+
           const codeData = document.createElement("td"); 
           const codeDropDown = document.createElement("input"); // TODO: Make this a drop down with values. Maybe create a function for it.
           codeDropDown.value = codeList[row].code; 
@@ -243,11 +254,9 @@
           newTableRow.appendChild(indentData);
           if(codeList[row].parameters != null && codeList[row].parameters.length > 0)
             {
-                //parametersData.colSpan = codeList[row].parameters.length;    
-                //parametersData.style.width = "65%";  
                 for(let param = 0; param < codeList[row].parameters.length; param++)
                 {
-                  let parametersCell = document.createElement("td");
+                    let parametersCell = document.createElement("td");
                     let parameterEdit = document.createElement("input");
                     parameterEdit.value = codeList[row].parameters[param]; 
 
