@@ -341,7 +341,10 @@ export class RPGMakerMapEditorProvider implements vscode.CustomTextEditorProvide
 						<label for="tileset-id">Tileset ID</label> 
 						<button id="save-tileset-id">Save Tileset ID</button>
 					</div>
-
+				<h3>Map Data</h3>
+				
+				<div id="map-data-layer">
+				</div>
 
 				<br/>
 				<br/>

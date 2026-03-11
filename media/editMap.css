@@ -1,3 +1,9 @@
 body {
     text-align: center;
 }
+
+.small-button
+{
+    width:fit-content;
+    height: fit-content;
+}

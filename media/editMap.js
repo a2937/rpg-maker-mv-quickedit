@@ -46,7 +46,7 @@
   const nextEventButton = document.getElementById("next-event"); 
   const previousEventButton = document.getElementById("previous-event"); 
 
-
+  const mapDataLayerHolder = document.getElementById("map-data-layer");
 
 
   autoPlayBGMElement?.addEventListener("click", () =>
@@ -158,6 +158,20 @@
     vscode.postMessage({command:'updateParameters', codeList: data});
   });
 
+  /**
+   * 
+   * @param {number[]} mapData 
+   * @param {number} width 
+   * @param {number} height 
+   * @param {number} x 
+   * @param {number} y 
+   * @param {number} z 
+   * @returns 
+   */
+  const tileId = function (mapData,width,height,x, y, z) {
+    return mapData[(z * height + y) * width + x] || 0;
+  };
+
 
   /**
    * @param {{ [x: string]: any; events: { [x: string]: any; }; }} [mapValue]
@@ -253,8 +267,26 @@
           // @ts-ignore
           fragment.appendChild(newTableRow); 
           
-      }
+      
+        }
       eventCodeTableBody?.replaceChildren(fragment);
+
+
+      // @ts-ignore
+      
+      for(let x = 0; x < mapValue["width"];x++)
+      {
+        // @ts-ignore
+        for(let y = 0 ; y < mapValue["height"]; y++)
+        {
+          // TODO: use flex to display these 
+          const newButton = document.createElement("button");
+          newButton.classList.add("small-button");
+          // @ts-ignore
+          newButton.innerText = tileId(mapValue["data"],mapValue["width"],mapValue["height"],x,y,5); 
+          mapDataLayerHolder?.appendChild(newButton); 
+        }
+      }
   }
 
   window.addEventListener('message', event =>
