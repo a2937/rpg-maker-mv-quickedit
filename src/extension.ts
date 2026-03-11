@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import { RPGMakerActorEditorProvider } from './rpgMakerActorEditor';
 import { RPGMakerMapEditorProvider } from './rpgMakerMapEditor';
+import { RPGMakerClassEditorProvider } from './rpgMakerClassEditor';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -19,6 +20,9 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(RPGMakerActorEditorProvider.register(context));
 
 	context.subscriptions.push(RPGMakerMapEditorProvider.register(context));
+
+	
+	context.subscriptions.push(RPGMakerClassEditorProvider.register(context));
 }
 
 // This method is called when your extension is deactivated

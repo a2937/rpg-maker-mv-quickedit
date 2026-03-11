@@ -37,6 +37,17 @@
         ],
         "priority": "default"
       }
+      ,
+      {
+        "viewType": "rpg-maker-mv-mz-quick-edit-tools.classEditor",
+        "displayName": "Class Editor",
+        "selector": [
+          {
+            "filenamePattern": "Classes.json"
+          }
+        ],
+        "priority": "default"
+      }
     ]
   },
   "scripts": {
